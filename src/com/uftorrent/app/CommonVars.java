@@ -38,4 +38,7 @@ public class CommonVars {
             System.out.format("Key: %s, Value: %s%n", envName, this.envVars.get(envName));
         }
     }
+    public String get(String key) {
+        return this.envVars.get(key);
+    }
 }
