@@ -32,7 +32,7 @@ public class peerProcess {
     }
     private static void initPeer(String[] args) {
         try {
-            //Initialize this peer Process' info
+            //Initialize this peer Process' info.
             peerId = args[0];
 
             if (peerId.length() != 4) {
