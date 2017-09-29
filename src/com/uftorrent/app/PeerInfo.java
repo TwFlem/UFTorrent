@@ -47,7 +47,7 @@ public class PeerInfo {
     public String getPortNumber(String id) {
         return this.peerInfo.get(id)[1];
     }
-    public String getFileDone(String id) {
+    public String getHasCompleteFile(String id) {
         return this.peerInfo.get(id)[2];
     }
 }
