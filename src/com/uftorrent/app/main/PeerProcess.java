@@ -1,17 +1,21 @@
-import com.uftorrent.app.CommonVars;
-import com.uftorrent.app.PeerInfo;
-import com.uftorrent.exceptions.InvalidPeerID;
+package com.uftorrent.app.main;
+import com.uftorrent.app.TcpSocket.TcpSocket;
+import com.uftorrent.app.setup.env.CommonVars;
+import com.uftorrent.app.exceptions.InvalidPeerID;
+import com.uftorrent.app.setup.env.PeerInfo;
 
 import static java.lang.System.exit;
 
-public class peerProcess {
-    private static CommonVars commonVars = new CommonVars();
-    private static PeerInfo peerInfo = new PeerInfo();
-    private static String peerId;
-    private static String hostName;
-    private static String portNumber;
-    private static String hasCompleteFile;
+public class PeerProcess {
+    protected static final CommonVars commonVars = new CommonVars();
+    protected static final PeerInfo peerInfo = new PeerInfo();
+    protected static String peerId;
+    protected static String hostName;
+    protected static String portNumber;
+    protected static String hasCompleteFile;
+    protected static String handshakeMessage = "P2PFILESHARINGPROJ0000000000";
     public static void main(String[] args) {
+
         initPeer(args);
 
         //Will make jUnit tests one day
@@ -29,7 +33,13 @@ public class peerProcess {
         System.out.println("Here's this Peer's Info!");
         System.out.format("ID: %s HostName: %s, PortNumber: %s, HasCompleteFile: %s%n",
                 peerId, hostName, portNumber, hasCompleteFile);
+
+        TcpSocket connection = new TcpSocket();
+
+        System.out.println("check out the sick logging class too!");
+        connection.simulateLogs();
     }
+
     private static void initPeer(String[] args) {
         try {
             //Initialize this peer Process' info.
@@ -44,7 +54,7 @@ public class peerProcess {
 
         }
         catch (ArrayIndexOutOfBoundsException ex) {
-            System.out.println("Invalid command line arguments. Please pass in a 4 digit peerProcess ID.");
+            System.out.println("Invalid command line arguments. Please pass in a 4 digit com.uftorrent.app.main.PeerProcess ID.");
             exit(1);
         }
         catch (InvalidPeerID ex) {
@@ -52,7 +62,7 @@ public class peerProcess {
             exit(1);
         }
         catch (NullPointerException ex) {
-            System.out.println("Invalid peer ID: peer ID provided is not in the peerProcess list.");
+            System.out.println("Invalid peer ID: peer ID provided is not in the com.uftorrent.app.main.PeerProcess list.");
             exit(1);
         }
     }

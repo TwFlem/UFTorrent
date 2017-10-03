@@ -1,4 +1,4 @@
-package com.uftorrent.app;
+package com.uftorrent.app.setup.env;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
