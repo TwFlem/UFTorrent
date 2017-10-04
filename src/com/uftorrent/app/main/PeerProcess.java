@@ -22,7 +22,6 @@ public class PeerProcess {
     protected static String handshakeMessage = "P2PFILESHARINGPROJ0000000000";
     protected static Util util = new Util();
     public static void main(String[] args) {
-
         clearOldProcessData(); //Deletes log files and peer downloaded files.
         initPeer(args); //Sets package variables regarding this peer.
 
@@ -64,7 +63,7 @@ public class PeerProcess {
 
         }
         catch (ArrayIndexOutOfBoundsException ex) {
-            System.out.println("Invalid command line arguments. Please pass in a 4 digit com.uftorrent.app.main.PeerProcess ID.");
+            System.out.println("Invalid command line arguments. Please pass in a 4 digit PeerProcess ID.");
             exit(1);
         }
         catch (InvalidPeerID ex) {
@@ -72,7 +71,7 @@ public class PeerProcess {
             exit(1);
         }
         catch (NullPointerException ex) {
-            System.out.println("Invalid peer ID: peer ID provided is not in the com.uftorrent.app.main.PeerProcess list.");
+            System.out.println("Invalid peer ID: peer ID provided is not in the PeerProcess list.");
             exit(1);
         }
     }

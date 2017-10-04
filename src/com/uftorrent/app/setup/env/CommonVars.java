@@ -20,7 +20,7 @@ public class CommonVars {
             BufferedReader bufferedReader = new BufferedReader(fileReader);
 
             while((line = bufferedReader.readLine()) != null) {
-                String[] envKeyValue = line.split("=");
+                String[] envKeyValue = line.split(" ");
                 this.envVars.put(envKeyValue[0], envKeyValue[1]);
             }
             bufferedReader.close();

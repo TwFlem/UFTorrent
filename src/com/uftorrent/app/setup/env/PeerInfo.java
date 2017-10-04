@@ -1,6 +1,7 @@
 package com.uftorrent.app.setup.env;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.io.FileReader;
@@ -21,9 +22,10 @@ public class PeerInfo {
 
             while((line = bufferedReader.readLine()) != null) {
                 // The first element of this array is the peer's ID
-                String[] peerInfoIDKeyAndValues = line.split("=");
-                String[] peerInfoValues = peerInfoIDKeyAndValues[1].split(",");
-                this.peerInfo.put(peerInfoIDKeyAndValues[0], peerInfoValues);
+                String[] parsedPeerInfo = line.split(" ");
+                String currentPeerId = parsedPeerInfo[0];
+                String[] currentPeerValues = Arrays.copyOfRange(parsedPeerInfo, 1, parsedPeerInfo.length);
+                this.peerInfo.put(currentPeerId, currentPeerValues);
             }
             bufferedReader.close();
         }
