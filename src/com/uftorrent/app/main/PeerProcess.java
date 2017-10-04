@@ -56,6 +56,8 @@ public class PeerProcess {
             if (peerId.length() != 4) {
                 throw new InvalidPeerID("peer ID must have 4 digits.");
             }
+
+            handshakeMessage = handshakeMessage + peerId;
             hostName = peerInfo.getHostName(peerId);
             portNumber = peerInfo.getPortNumber(peerId);
             hasCompleteFile = peerInfo.getHasCompleteFile(peerId);
