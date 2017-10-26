@@ -4,7 +4,7 @@ public class FilePiece {
     public byte [] filePiece;
     public int pieceIndex;
     public FilePiece() {
-        this.filePiece = [];
+        this.filePiece = new byte[0];
         this.pieceIndex = 0;
     }
     public FilePiece(byte[] filePiece, int pieceIndex) {

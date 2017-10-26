@@ -6,7 +6,7 @@ import com.uftorrent.app.exceptions.InvalidPeerID;
 import com.uftorrent.app.setup.env.PeerInfo;
 import com.uftorrent.app.utils.Util;
 
-import java.io.File;
+import java.io.*;
 import java.util.regex.Pattern;
 
 import static java.lang.System.exit;
@@ -95,4 +95,41 @@ public class PeerProcess {
             System.err.println("Error: Can't delete old process data.");
         }
     }
+    private static void readFileIntoPiece(String fileName, int pieceSize){
+        try {
+            // Use this for reading the data.
+            byte[] buffer = new byte[pieceSize];
+
+            FileInputStream inputStream =
+                    new FileInputStream(fileName);
+
+            // read fills buffer with data and returns
+            // the number of bytes read (which of course
+            // may be less than the buffer size, but
+            // it will never be more).
+            int total = 0;
+            int nRead = 0;
+            while((nRead = inputStream.read(buffer)) != -1) {
+                // Convert to String so we can display it.
+                // FOR TESTING ONLY, TO REMOVE LATER
+                System.out.println(new String(buffer));
+                total += nRead;
+            }
+            //Close file, print out #bytes read
+            inputStream.close();
+            System.out.println("Read " + total + " bytes");
+        }
+        //error catching
+        catch(FileNotFoundException ex) {
+            System.out.println(
+                    "Unable to open file '" +
+                            fileName + "'");
+        }
+        catch(IOException ex) {
+            System.out.println(
+                    "Error reading file '"
+                            + fileName + "'");
+        }
+    }
 }
+
