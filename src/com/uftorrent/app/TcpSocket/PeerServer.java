@@ -1,42 +1,49 @@
 package com.uftorrent.app.TcpSocket;
 
 
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 public class PeerServer implements Runnable {
+    private String peerId;
+    private String hostName;
+    private String portNumber;
+    private String hasCompleteFile;
+    private String handshakeMessage;
+    private PrintWriter out;
+    private BufferedReader in;
+    public PeerServer(String peerId, String hostName, String portNumber, String hasCompleteFile, String handshakeMessage) {
+        this.peerId = peerId;
+        this.hostName = hostName;
+        this.portNumber  = portNumber;
+        this.hasCompleteFile = hasCompleteFile;
+        this.handshakeMessage = handshakeMessage;
+    }
     public void run() {
         System.out.println("Hello from a server thread!");
-        String sendToClientData = "Hello from the Server!";
+        String genericData = "Thanks for the message!";
         try {
-            ServerSocket srvr = new ServerSocket(1234);
+            String inputLine, outputLine;
+            ServerSocket serverSocket = new ServerSocket(Integer.parseInt(portNumber));
+            Socket clientConnection = serverSocket.accept();
+            out = new PrintWriter(clientConnection.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(clientConnection.getInputStream()));
 
-            // After listening on a port
-            makeClient();
-
-            // Wait for anything trying to make a connection
-            Socket skt = srvr.accept();
-            System.out.print("A client has contacted me!\n");
-
-            // Object use to write data to a socket
-            PrintWriter out = new PrintWriter(skt.getOutputStream(), true);
-            System.out.print("Sending string to client: " + sendToClientData + "\n");
-
-            // Shove data out into the network through the socket.
-            out.print(sendToClientData);
+            while ((inputLine = in.readLine()) != null) {
+                outputLine = genericData;
+                out.println(outputLine);
+                if (outputLine.equals(genericData))
+                    break;
+            }
 
             // Server cleanup procedure
-            out.close();
-            skt.close();
-            srvr.close();
+            serverOut.close();
+            clientConnection.close();
+            serverSocket.close();
         }
         catch(Exception e) {
             System.out.print("Whoops! The Server quit unexpectedly!\n");
         }
-    }
-    private void makeClient() {
-        Thread peerClient = new Thread(new PeerClient());
-        peerClient.start();
     }
 }

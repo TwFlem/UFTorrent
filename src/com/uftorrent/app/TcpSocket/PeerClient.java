@@ -1,29 +1,52 @@
 package com.uftorrent.app.TcpSocket;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.Socket;
 
 public class PeerClient implements Runnable {
-    public PeerClient() {
+    private String peerId;
+    private String hostName;
+    private String portNumber;
+    private String hasCompleteFile;
+    private String handshakeMessage;
+    private PrintStream os;
+    private DataInputStream is;
+    public PeerClient(String peerId, String hostName, String portNumber, String hasCompleteFile, String handshakeMessage) {
+        this.peerId = peerId;
+        this.hostName = hostName;
+        this.portNumber  = portNumber;
+        this.hasCompleteFile = hasCompleteFile;
+        this.handshakeMessage = handshakeMessage;
     }
     public void run() {
         try {
             System.out.println("Hello from a client thread!");
-            Socket skt = new Socket("localhost", 1234);
-            BufferedReader in = new BufferedReader(new InputStreamReader(skt.getInputStream()));
+
+            Socket socketToPeer = new Socket(this.hostName, Integer.parseInt(this.portNumber));
+            os = new PrintStream(socketToPeer.getOutputStream(), true);
+            is = new DataInputStream(socketToPeer.getInputStream());
+
+            while (true) {
+                String line = is.readLine();
+                System.out.println("Client Received string: " + line);
+                if (line == "Hello") {
+                    break;
+                }
+            }
 
             // Wait until the byte stream finishes reading bytes
-            while (!in.ready()) {}
-            System.out.println("Received string: " + in.readLine());
 
-            // Close reader
-            in.close();
+            // Clean up
+            is.close();
+            os.close();
+            socketToPeer.close();
         }
         catch(Exception e) {
             System.out.print("Whoops! Client unexpectedly quit!\n");
         }
     }
+
+    // Testing method for simulating log output
     public void simulateLogs() {
         EventLogger logger = new EventLogger();
         String[] prefferedNeighbors = {"1000", "1001", "1002"};

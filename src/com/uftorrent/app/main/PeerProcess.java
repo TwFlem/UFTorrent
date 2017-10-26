@@ -54,18 +54,22 @@ public class PeerProcess {
         System.out.format("ID: %s HostName: %s, PortNumber: %s, HasCompleteFile: %s%n",
                 peerId, hostName, portNumber, hasCompleteFile);
 
-        PeerClient connection = new PeerClient();
 
-        System.out.println("check out the sick logging class too!");
-        connection.simulateLogs();
-
-        Thread peerServer = new Thread(new PeerServer());
+        // Start the Server thread
+        Thread peerServer = new Thread(new PeerServer(peerId,
+                hostName,
+                portNumber,
+                hasCompleteFile,
+                handshakeMessage));
         peerServer.start();
-        try {
-            peerServer.join(5000);
-        } catch(Exception e) {
-            System.out.println("Server Quit Unexpectedly");
-        }
+
+        // Start the Client thread
+        Thread peerClient = new Thread(new PeerClient(peerId,
+                hostName,
+                portNumber,
+                hasCompleteFile,
+                handshakeMessage));
+        peerClient.start();
     }
 
     private static void initPeer(String[] args) {
