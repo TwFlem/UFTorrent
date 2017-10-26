@@ -5,6 +5,7 @@ import com.uftorrent.app.setup.env.CommonVars;
 import com.uftorrent.app.exceptions.InvalidPeerID;
 import com.uftorrent.app.setup.env.PeerInfo;
 import com.uftorrent.app.utils.Util;
+import com.uftorrent.app.protocols.FilePiece;
 
 import java.io.*;
 import java.util.regex.Pattern;
@@ -28,7 +29,9 @@ public class PeerProcess {
         //Will make jUnit tests one day
         System.out.println("Here's our env variables!");
         commonVars.print();
-
+        //testing for reading file
+        System.out.println("Heres the file reader in action!");
+        readFileIntoPiece("Common.cfg", 3);
         System.out.println("Here's all Peer Info!");
         peerInfo.print();
 
@@ -109,12 +112,26 @@ public class PeerProcess {
             // it will never be more).
             int total = 0;
             int nRead = 0;
+            int pieceCount = 0;
+            FilePiece[] pieceArray = new FilePiece[100];
+            System.out.println("FILE READER INFO HERE");
             while((nRead = inputStream.read(buffer)) != -1) {
+                //Put the data in a new file piece
+                pieceArray[pieceCount] = new FilePiece(buffer, pieceCount);
                 // Convert to String so we can display it.
                 // FOR TESTING ONLY, TO REMOVE LATER
                 System.out.println(new String(buffer));
                 total += nRead;
+                pieceCount = pieceCount + 1;
             }
+            for (int i = pieceCount; i < pieceArray.length; i++){
+                pieceArray[i] = new FilePiece();
+            }
+            for (int i = 0; i < pieceArray.length; i++){
+                System.out.println(new String(pieceArray[i].getFilePiece()));
+            }
+
+
             //Close file, print out #bytes read
             inputStream.close();
             System.out.println("Read " + total + " bytes");
