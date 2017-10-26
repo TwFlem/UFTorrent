@@ -15,6 +15,9 @@ import java.util.regex.Pattern;
 import static java.lang.Math.*;
 import java.lang.*;
 import java.util.Arrays;
+import java.nio.file.StandardOpenOption.*;
+import java.io.IOException;
+import java.io.FileOutputStream;
 
 import static java.lang.System.exit;
 
@@ -37,7 +40,11 @@ public class PeerProcess {
         commonVars.print();
         //testing for reading file
         System.out.println("Heres the file reader in action!");
-        readFileIntoPiece("Common.cfg", 3);
+        FilePiece[] filePieces = readFileIntoPiece("Common.cfg", 3);
+        for (int i = 0; i < filePieces.length; i++)
+        {
+            writeFilePiece("testing_log.txt", filePieces[i]);
+        }
         System.out.println("Here's all Peer Info!");
         peerInfo.print();
 
@@ -125,7 +132,7 @@ public class PeerProcess {
             {
                 byte[] section = new byte[pieceSize];
 
-                pieceArray[i] = new FilePiece(Arrays.copyOfRange(data, i, i + pieceSize), pieceSize);
+                pieceArray[i] = new FilePiece(Arrays.copyOfRange(data, i*pieceSize, i*3 + pieceSize), pieceSize);
             }
             //debugging code
             /*
@@ -154,8 +161,9 @@ public class PeerProcess {
     {
         try {
             byte[] bytes = piece.getFilePiece();
-            Path path = Paths.get(fileName);
-            Files.write(path, bytes);
+            FileOutputStream fos = new FileOutputStream("testing_log.txt", true);
+            fos.write(bytes);
+            fos.close();
         }
         //error catching
         catch(FileNotFoundException ex) {
