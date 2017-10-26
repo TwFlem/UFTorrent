@@ -11,13 +11,9 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.Path;
-import java.util.regex.Pattern;
-import static java.lang.Math.*;
 import java.lang.*;
+import java.util.regex.Pattern;
 import java.util.Arrays;
-import java.nio.file.StandardOpenOption.*;
-import java.io.IOException;
-import java.io.FileOutputStream;
 
 import static java.lang.System.exit;
 
