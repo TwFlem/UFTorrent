@@ -1,6 +1,6 @@
 package com.uftorrent.app.main;
 
-import com.uftorrent.app.TcpSocket.TcpSocket;
+import com.uftorrent.app.TcpSocket.Client;
 import com.uftorrent.app.setup.env.CommonVars;
 import com.uftorrent.app.exceptions.InvalidPeerID;
 import com.uftorrent.app.setup.env.PeerInfo;
@@ -41,7 +41,7 @@ public class PeerProcess {
         System.out.format("ID: %s HostName: %s, PortNumber: %s, HasCompleteFile: %s%n",
                 peerId, hostName, portNumber, hasCompleteFile);
 
-        TcpSocket connection = new TcpSocket();
+        Client connection = new Client();
 
         System.out.println("check out the sick logging class too!");
         connection.simulateLogs();

@@ -1,8 +1,8 @@
 package com.uftorrent.app.TcpSocket;
 import com.uftorrent.app.main.PeerProcess;
 
-public class TcpSocket extends PeerProcess {
-    public TcpSocket() {
+public class Client extends PeerProcess {
+    public Client() {
     }
     public void simulateLogs() {
         EventLogger logger = new EventLogger();
