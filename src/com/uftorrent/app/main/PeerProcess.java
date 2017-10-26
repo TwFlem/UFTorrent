@@ -8,9 +8,13 @@ import com.uftorrent.app.utils.Util;
 import com.uftorrent.app.protocols.FilePiece;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.regex.Pattern;
 import static java.lang.Math.*;
 import java.lang.*;
+import java.util.Arrays;
 
 import static java.lang.System.exit;
 
@@ -100,45 +104,33 @@ public class PeerProcess {
             System.err.println("Error: Can't delete old process data.");
         }
     }
-    private static void readFileIntoPiece(String fileName, int pieceSize){
+    //This method will read a file into an appropriate number of FilePieces, and return an array of these pieces
+    private static FilePiece[] readFileIntoPiece(String fileName, int pieceSize){
         try {
             // Use this for reading the data.
             byte[] buffer = new byte[pieceSize];
             int total = 0;
             int nRead = 0;
             int pieceCount = 0;
-
-            FileInputStream inputStream =
-                    new FileInputStream(fileName);
-
             int fileLength = Math.toIntExact(new File(fileName).length());
             FilePiece[] pieceArray = new FilePiece[fileLength/pieceSize];
-            
+            Path path = Paths.get(fileName);
+            byte[] data = Files.readAllBytes(path);
             System.out.println("FILE READER INFO HERE");
-            while((nRead = inputStream.read(buffer)) != -1) {
-                //Put the data in a new file piece
-                System.out.println("Filling " + pieceCount + "index with " + new String(buffer));
-                // Convert to String so we can display it.
-                // FOR TESTING ONLY, TO REMOVE LATER
-                System.out.println(new String(buffer));
-                pieceArray[pieceCount] = new FilePiece(buffer, pieceCount);
-                total += nRead;
-                pieceCount += 1;
+            System.out.println(new String(data));
+            for (int i = 0; i < pieceArray.length; i++)
+            {
+                byte[] section = new byte[pieceSize];
+
+                pieceArray[i] = new FilePiece(Arrays.copyOfRange(data, i, i + pieceSize), pieceSize);
             }
-            for (int i = pieceCount; i < pieceArray.length; i++){
-                pieceArray[i] = new FilePiece();
-            }
-            System.out.println("HERES WHATS IN THE PIECE ARRAY");
-            for (int i = 0; i < pieceArray.length; i++){
-                System.out.print(i);
+            for (int i = 0; i < pieceArray.length; i++)
+            {
                 System.out.println(new String(pieceArray[i].getFilePiece()));
             }
-
-
-            //Close file, print out #bytes read
-            inputStream.close();
-            System.out.println("Read " + total + " bytes");
+            return pieceArray;
         }
+
         //error catching
         catch(FileNotFoundException ex) {
             System.out.println(
@@ -150,6 +142,7 @@ public class PeerProcess {
                     "Error reading file '"
                             + fileName + "'");
         }
+        return null;
     }
 }
 
