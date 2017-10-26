@@ -116,18 +116,24 @@ public class PeerProcess {
             FilePiece[] pieceArray = new FilePiece[fileLength/pieceSize];
             Path path = Paths.get(fileName);
             byte[] data = Files.readAllBytes(path);
+            //Debugging code
+            /*
             System.out.println("FILE READER INFO HERE");
             System.out.println(new String(data));
+            */
             for (int i = 0; i < pieceArray.length; i++)
             {
                 byte[] section = new byte[pieceSize];
 
                 pieceArray[i] = new FilePiece(Arrays.copyOfRange(data, i, i + pieceSize), pieceSize);
             }
+            //debugging code
+            /*
             for (int i = 0; i < pieceArray.length; i++)
             {
                 System.out.println(new String(pieceArray[i].getFilePiece()));
             }
+            */
             return pieceArray;
         }
 
