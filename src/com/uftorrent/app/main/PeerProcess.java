@@ -150,5 +150,24 @@ public class PeerProcess {
         }
         return null;
     }
+    private static void writeFilePiece(String fileName, FilePiece piece)
+    {
+        try {
+            byte[] bytes = piece.getFilePiece();
+            Path path = Paths.get(fileName);
+            Files.write(path, bytes);
+        }
+        //error catching
+        catch(FileNotFoundException ex) {
+            System.out.println(
+                    "Unable to open file '" +
+                            fileName + "'");
+        }
+        catch(IOException ex) {
+            System.out.println(
+                    "Error reading file '"
+                            + fileName + "'");
+        }
+    }
 }
 
