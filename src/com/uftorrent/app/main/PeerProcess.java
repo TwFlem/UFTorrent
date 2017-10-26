@@ -9,6 +9,8 @@ import com.uftorrent.app.protocols.FilePiece;
 
 import java.io.*;
 import java.util.regex.Pattern;
+import static java.lang.Math.*;
+import java.lang.*;
 
 import static java.lang.System.exit;
 
@@ -102,32 +104,33 @@ public class PeerProcess {
         try {
             // Use this for reading the data.
             byte[] buffer = new byte[pieceSize];
+            int total = 0;
+            int nRead = 0;
+            int pieceCount = 0;
 
             FileInputStream inputStream =
                     new FileInputStream(fileName);
 
-            // read fills buffer with data and returns
-            // the number of bytes read (which of course
-            // may be less than the buffer size, but
-            // it will never be more).
-            int total = 0;
-            int nRead = 0;
-            int pieceCount = 0;
-            FilePiece[] pieceArray = new FilePiece[100];
+            int fileLength = Math.toIntExact(new File(fileName).length());
+            FilePiece[] pieceArray = new FilePiece[fileLength/pieceSize];
+            
             System.out.println("FILE READER INFO HERE");
             while((nRead = inputStream.read(buffer)) != -1) {
                 //Put the data in a new file piece
-                pieceArray[pieceCount] = new FilePiece(buffer, pieceCount);
+                System.out.println("Filling " + pieceCount + "index with " + new String(buffer));
                 // Convert to String so we can display it.
                 // FOR TESTING ONLY, TO REMOVE LATER
                 System.out.println(new String(buffer));
+                pieceArray[pieceCount] = new FilePiece(buffer, pieceCount);
                 total += nRead;
-                pieceCount = pieceCount + 1;
+                pieceCount += 1;
             }
             for (int i = pieceCount; i < pieceArray.length; i++){
                 pieceArray[i] = new FilePiece();
             }
+            System.out.println("HERES WHATS IN THE PIECE ARRAY");
             for (int i = 0; i < pieceArray.length; i++){
+                System.out.print(i);
                 System.out.println(new String(pieceArray[i].getFilePiece()));
             }
 
