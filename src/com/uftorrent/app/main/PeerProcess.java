@@ -6,9 +6,15 @@ import com.uftorrent.app.setup.env.CommonVars;
 import com.uftorrent.app.exceptions.InvalidPeerID;
 import com.uftorrent.app.setup.env.PeerInfo;
 import com.uftorrent.app.utils.Util;
+import com.uftorrent.app.protocols.FilePiece;
 
-import java.io.File;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.lang.*;
 import java.util.regex.Pattern;
+import java.util.Arrays;
 
 import static java.lang.System.exit;
 
@@ -29,7 +35,13 @@ public class PeerProcess {
         //Will make jUnit tests one day
         System.out.println("Here's our env variables!");
         commonVars.print();
-
+        //testing for reading file
+        System.out.println("Heres the file reader in action!");
+        FilePiece[] filePieces = readFileIntoPiece("Common.cfg", 3);
+        for (int i = 0; i < filePieces.length; i++)
+        {
+            writeFilePiece("testing_log.txt", filePieces[i]);
+        }
         System.out.println("Here's all Peer Info!");
         peerInfo.print();
 
@@ -104,4 +116,71 @@ public class PeerProcess {
             System.err.println("Error: Can't delete old process data.");
         }
     }
+    //This method will read a file into an appropriate number of FilePieces, and return an array of these pieces
+    private static FilePiece[] readFileIntoPiece(String fileName, int pieceSize){
+        try {
+            // Use this for reading the data.
+            byte[] buffer = new byte[pieceSize];
+            int total = 0;
+            int nRead = 0;
+            int pieceCount = 0;
+            int fileLength = Math.toIntExact(new File(fileName).length());
+            FilePiece[] pieceArray = new FilePiece[fileLength/pieceSize];
+            Path path = Paths.get(fileName);
+            byte[] data = Files.readAllBytes(path);
+            //Debugging code
+            /*
+            System.out.println("FILE READER INFO HERE");
+            System.out.println(new String(data));
+            */
+            for (int i = 0; i < pieceArray.length; i++)
+            {
+                byte[] section = new byte[pieceSize];
+
+                pieceArray[i] = new FilePiece(Arrays.copyOfRange(data, i*pieceSize, i*3 + pieceSize), pieceSize);
+            }
+            //debugging code
+            /*
+            for (int i = 0; i < pieceArray.length; i++)
+            {
+                System.out.println(new String(pieceArray[i].getFilePiece()));
+            }
+            */
+            return pieceArray;
+        }
+
+        //error catching
+        catch(FileNotFoundException ex) {
+            System.out.println(
+                    "Unable to open file '" +
+                            fileName + "'");
+        }
+        catch(IOException ex) {
+            System.out.println(
+                    "Error reading file '"
+                            + fileName + "'");
+        }
+        return null;
+    }
+    private static void writeFilePiece(String fileName, FilePiece piece)
+    {
+        try {
+            byte[] bytes = piece.getFilePiece();
+            FileOutputStream fos = new FileOutputStream("testing_log.txt", true);
+            fos.write(bytes);
+            fos.close();
+        }
+        //error catching
+        catch(FileNotFoundException ex) {
+            System.out.println(
+                    "Unable to open file '" +
+                            fileName + "'");
+        }
+        catch(IOException ex) {
+            System.out.println(
+                    "Error reading file '"
+                            + fileName + "'");
+        }
+    }
 }
+
