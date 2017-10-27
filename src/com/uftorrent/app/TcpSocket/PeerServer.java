@@ -34,9 +34,11 @@ public class PeerServer implements Runnable {
 
             while ((inputLine = in.readLine()) != null) {
                 System.out.println("From Client: " + inputLine);
-                outputLine = genericData;
-                if (inputLine.equals("Cya."))
+                outputLine = handshakeMessage;
+                if (inputLine.equals("Cya.")) {
                     break;
+                }
+                out.println("Bye.");
             }
 
             // Server cleanup procedure

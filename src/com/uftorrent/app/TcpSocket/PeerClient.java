@@ -32,11 +32,10 @@ public class PeerClient implements Runnable {
 
             while ((fromServer = in.readLine()) != null) {
                 System.out.println("From Server: " + fromServer);
-                out.println("Cya.");
                 if (fromServer.equals("Bye.")) {
                     break;
                 }
-
+                out.println("Cya.");
             }
 
             // Wait until the byte stream finishes reading bytes
