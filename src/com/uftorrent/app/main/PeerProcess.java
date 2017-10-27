@@ -74,7 +74,7 @@ public class PeerProcess {
         try {
             peerServer.join();
         } catch (Exception e) {
-            System.out.println("Thread executionf failed");
+            System.out.println("Thread execution failed");
         }
     }
 
