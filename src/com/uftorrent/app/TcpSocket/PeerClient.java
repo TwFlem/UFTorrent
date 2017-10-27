@@ -9,8 +9,8 @@ public class PeerClient implements Runnable {
     private String portNumber;
     private String hasCompleteFile;
     private String handshakeMessage;
-    private PrintStream os;
-    private DataInputStream is;
+    private PrintStream out;
+    private DataInputStream in;
     public PeerClient(String peerId, String hostName, String portNumber, String hasCompleteFile, String handshakeMessage) {
         this.peerId = peerId;
         this.hostName = hostName;
@@ -22,23 +22,28 @@ public class PeerClient implements Runnable {
         try {
             System.out.println("Hello from a client thread!");
 
-            Socket socketToPeer = new Socket(this.hostName, Integer.parseInt(this.portNumber));
-            os = new PrintStream(socketToPeer.getOutputStream(), true);
-            is = new DataInputStream(socketToPeer.getInputStream());
+            String fromServer;
 
-            while (true) {
-                String line = is.readLine();
-                System.out.println("Client Received string: " + line);
-                if (line == "Hello") {
+            Socket socketToPeer = new Socket(this.hostName, Integer.parseInt(this.portNumber));
+            out = new PrintStream(socketToPeer.getOutputStream(), true);
+            in = new DataInputStream(socketToPeer.getInputStream());
+
+            out.println(handshakeMessage);
+
+            while ((fromServer = in.readLine()) != null) {
+                System.out.println("From Server: " + fromServer);
+                out.println("Cya.");
+                if (fromServer.equals("Bye.")) {
                     break;
                 }
+
             }
 
             // Wait until the byte stream finishes reading bytes
 
             // Clean up
-            is.close();
-            os.close();
+            in.close();
+            out.close();
             socketToPeer.close();
         }
         catch(Exception e) {

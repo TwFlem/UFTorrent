@@ -70,6 +70,13 @@ public class PeerProcess {
                 hasCompleteFile,
                 handshakeMessage));
         peerClient.start();
+
+        // wait for the sever thread to finish
+        try {
+            peerServer.join();
+        } catch (Exception e) {
+            System.out.println("Thread executionf failed");
+        }
     }
 
     private static void initPeer(String[] args) {
@@ -121,7 +128,7 @@ public class PeerProcess {
         }
     }
     //This method will read a file into an appropriate number of FilePieces, and return an array of these pieces
-    private static FilePiece[] readFileIntoPiece(String fileName, int pieceSize){
+    private static FilePiece[] readFileIntoPiece(String fileName, int pieceSize) {
         try {
             // Use this for reading the data.
             byte[] buffer = new byte[pieceSize];
@@ -137,8 +144,7 @@ public class PeerProcess {
             System.out.println("FILE READER INFO HERE");
             System.out.println(new String(data));
             */
-            for (int i = 0; i < pieceArray.length; i++)
-            {
+            for (int i = 0; i < pieceArray.length; i++) {
                 byte[] section = new byte[pieceSize];
 
                 pieceArray[i] = new FilePiece(Arrays.copyOfRange(data, i*pieceSize, i*3 + pieceSize), pieceSize);

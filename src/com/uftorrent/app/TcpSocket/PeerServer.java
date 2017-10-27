@@ -22,7 +22,7 @@ public class PeerServer implements Runnable {
     }
     public void run() {
         System.out.println("Hello from a server thread!");
-        String genericData = "Thanks for the message!";
+        String genericData = "Hello!";
         try {
             String inputLine, outputLine;
             ServerSocket serverSocket = new ServerSocket(Integer.parseInt(portNumber));
@@ -30,15 +30,17 @@ public class PeerServer implements Runnable {
             out = new PrintWriter(clientConnection.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(clientConnection.getInputStream()));
 
+            out.print(handshakeMessage);
+
             while ((inputLine = in.readLine()) != null) {
+                System.out.println("From Client: " + inputLine);
                 outputLine = genericData;
-                out.println(outputLine);
-                if (outputLine.equals(genericData))
+                if (inputLine.equals("Cya."))
                     break;
             }
 
             // Server cleanup procedure
-            serverOut.close();
+            out.close();
             clientConnection.close();
             serverSocket.close();
         }
