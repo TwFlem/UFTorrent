@@ -22,6 +22,7 @@ public class Message {
         this.data = data;
         this.messageType = messageType;
     }
+    //If only given a messageType, the message should not have a length or payload
     public Message(byte messageType) {
         if (messageType == DATA_CHOKE || messageType == DATA_UNCHOKE ||
                 messageType == DATA_INTERESTED || messageType == DATA_UNINTERESTED)
