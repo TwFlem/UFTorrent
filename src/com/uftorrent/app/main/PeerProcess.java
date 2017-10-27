@@ -31,7 +31,6 @@ public class PeerProcess {
     public static void main(String[] args) {
         clearOldProcessData(); //Deletes log files and peer downloaded files.
         initPeer(args); //Sets package variables regarding this peer.
-
         //Will make jUnit tests one day
         System.out.println("Here's our env variables!");
         commonVars.print();
