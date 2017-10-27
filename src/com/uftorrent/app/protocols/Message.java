@@ -14,13 +14,11 @@ public class Message {
     //message length may need to be made into a byte array for consistency,
     //but a int IS 4 bytes long
     private int messageLength;
-    private int pieceIndex;
     private byte[] data;
     private byte messageType;
     //------------------Constructors  down here ----------------------------------------------------
-    public Message(int messageLength, int pieceIndex, byte[] data, byte messageType) {
+    public Message(int messageLength, byte[] data, byte messageType) {
         this.messageLength = messageLength;
-        this.pieceIndex = pieceIndex;
         this.data = data;
         this.messageType = messageType;
     }
@@ -30,7 +28,6 @@ public class Message {
         {
             this.messageLength = 0;
             this.data = new byte[0];
-            this.pieceIndex = 0;
         }
         else
         {
@@ -41,13 +38,6 @@ public class Message {
 
 
     //-------------------------Other methods down here-------------------------------------------------
-    public int getPieceIndex() {
-        return pieceIndex;
-    }
-
-    public void setPieceIndex(int pieceIndex) {
-        this.pieceIndex = pieceIndex;
-    }
 
     public int getLength() {
         return messageLength;
@@ -75,10 +65,11 @@ public class Message {
     //Return a piece index if the message is of the proper type to have one
     public int returnPieceIndex()
     {
+        int pieceIndex = -1;
         int type = this.getMessageType();
         if (type == DATA_HAVE || type == DATA_REQUEST || type == DATA_PIECE)
         {
-            int pieceIndex = this.getData()[0];
+            pieceIndex = this.getData()[0];
         }
         else
         {
