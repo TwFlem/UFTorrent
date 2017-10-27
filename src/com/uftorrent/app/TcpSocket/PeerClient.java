@@ -25,6 +25,7 @@ public class PeerClient implements Runnable {
             String fromServer;
 
             Socket socketToPeer = new Socket(this.hostName, Integer.parseInt(this.portNumber));
+            UFTorrentProtocol protocol = new UFTorrentProtocol("client");
             out = new PrintStream(socketToPeer.getOutputStream(), true);
             in = new DataInputStream(socketToPeer.getInputStream());
 
@@ -32,9 +33,11 @@ public class PeerClient implements Runnable {
 
             while ((fromServer = in.readLine()) != null) {
                 System.out.println("From Server: " + fromServer);
-                if (fromServer.equals("Bye.")) {
+                if (fromServer.equals("Bye.")
+                        || fromServer.equals("Send me a handshake first, then let's talk.")) {
                     break;
                 }
+                protocol.handleInput(fromServer);
                 out.println("Cya.");
             }
 

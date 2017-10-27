@@ -27,18 +27,17 @@ public class PeerServer implements Runnable {
             String inputLine, outputLine;
             ServerSocket serverSocket = new ServerSocket(Integer.parseInt(portNumber));
             Socket clientConnection = serverSocket.accept();
+            UFTorrentProtocol protocol = new UFTorrentProtocol("server");
             out = new PrintWriter(clientConnection.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(clientConnection.getInputStream()));
 
-            out.print(handshakeMessage);
-
             while ((inputLine = in.readLine()) != null) {
                 System.out.println("From Client: " + inputLine);
-                outputLine = handshakeMessage;
                 if (inputLine.equals("Cya.")) {
                     break;
                 }
-                out.println("Bye.");
+                outputLine = protocol.handleInput(inputLine);
+                out.println(outputLine);
             }
 
             // Server cleanup procedure
