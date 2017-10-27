@@ -27,6 +27,7 @@ public class PeerProcess {
     protected static String portNumber;
     protected static String hasCompleteFile;
     protected static String handshakeMessage = "P2PFILESHARINGPROJ0000000000";
+    protected static String downloadFilePath;
     protected static Util util = new Util();
     public static void main(String[] args) {
         clearOldProcessData(); //Deletes log files and peer downloaded files.
@@ -37,9 +38,8 @@ public class PeerProcess {
         //testing for reading file
         System.out.println("Heres the file reader in action!");
         FilePiece[] filePieces = readFileIntoPiece("Common.cfg", 3);
-        for (int i = 0; i < filePieces.length; i++)
-        {
-            writeFilePiece("testing_log.txt", filePieces[i]);
+        for (int i = 0; i < filePieces.length; i++) {
+            writeFilePiece(downloadFilePath, filePieces[i]);
         }
         System.out.println("Here's all Peer Info!");
         peerInfo.print();
@@ -92,6 +92,17 @@ public class PeerProcess {
             portNumber = peerInfo.getPortNumber(peerId);
             hasCompleteFile = peerInfo.getHasCompleteFile(peerId);
 
+            // Create downloading Directory
+            File downloadDir = new File("peer_" + peerId);
+            System.out.println("creating directory: " + downloadDir.getName());
+            boolean createDirSuccessful = downloadDir.mkdir();
+
+            if (!createDirSuccessful) {
+                throw new SecurityException();
+            }
+            System.out.println(downloadDir.getPath());
+            downloadFilePath = downloadDir.getPath() + "/downloadFile";
+
         }
         catch (ArrayIndexOutOfBoundsException ex) {
             System.out.println("Invalid command line arguments. Please pass in a 4 digit PeerProcess ID.");
@@ -103,6 +114,10 @@ public class PeerProcess {
         }
         catch (NullPointerException ex) {
             System.out.println("Invalid peer ID: peer ID provided is not in the PeerProcess list.");
+            exit(1);
+        }
+        catch(SecurityException ex) {
+            System.out.println("There was a problem creating the download directory. Please remove any past downloading directories.");
             exit(1);
         }
     }
@@ -175,7 +190,7 @@ public class PeerProcess {
     {
         try {
             byte[] bytes = piece.getFilePiece();
-            FileOutputStream fos = new FileOutputStream("testing_log.txt", true);
+            FileOutputStream fos = new FileOutputStream(fileName, true);
             fos.write(bytes);
             fos.close();
         }

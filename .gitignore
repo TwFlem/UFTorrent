@@ -4,3 +4,5 @@
 
 *.log
 testing_log.txt
+peer_*
+out
