@@ -12,6 +12,7 @@ import static java.lang.System.exit;
 public class PeerServer extends PeerProcess implements Runnable{
     private PrintWriter out;
     private BufferedReader in;
+    EventLogger eventLogger = new EventLogger();
     public void run() {
         System.out.println("Hello from a server thread!");
         try {
@@ -52,7 +53,9 @@ public class PeerServer extends PeerProcess implements Runnable{
             while ((fromClient = in.readLine()) != null) {
                 System.out.println("Handshake From Client: " + fromClient);
                 if (fromClient.substring(0, 18).equals("P2PFILESHARINGPROJ")) {
-                    return fromClient.substring(fromClient.length() - 4);
+                    String otherPeerId = fromClient.substring(fromClient.length() - 4);
+                    eventLogger.logTCPConnectionFrom(otherPeerId);
+                    return otherPeerId;
                 }
             }
         }
