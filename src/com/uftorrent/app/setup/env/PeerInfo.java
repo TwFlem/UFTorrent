@@ -46,10 +46,20 @@ public class PeerInfo {
     public String getHostName(String id) {
         return this.peerInfo.get(id)[0];
     }
-    public String getPortNumber(String id) {
-        return this.peerInfo.get(id)[1];
+    public int getPortNumber(String id) {
+        return Integer.parseInt(this.peerInfo.get(id)[1]);
     }
-    public String getHasCompleteFile(String id) {
-        return this.peerInfo.get(id)[2];
+    public boolean getHasCompleteFile(String id) {
+        return this.peerInfo.get(id)[2].equals("0");
+    }
+    public void setHasCompleteFile(String peerId, boolean hasCompleteFile) {
+        String[] currentPeerValues = this.peerInfo.get(peerId);
+        if (hasCompleteFile) {
+            currentPeerValues[2] = "1";
+            this.peerInfo.put(peerId, currentPeerValues);
+            return;
+        }
+        currentPeerValues[2] = "0";
+        this.peerInfo.put(peerId, currentPeerValues);
     }
 }

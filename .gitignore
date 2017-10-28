@@ -3,3 +3,5 @@
 .idea/workspace.xml
 
 *.log
+testing_log.txt
+peer_*

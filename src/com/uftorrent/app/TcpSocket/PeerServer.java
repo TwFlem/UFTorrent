@@ -1,42 +1,67 @@
 package com.uftorrent.app.TcpSocket;
 
 
-import java.io.PrintWriter;
+import com.uftorrent.app.main.PeerProcess;
+
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class PeerServer implements Runnable {
+import static java.lang.System.exit;
+
+public class PeerServer extends PeerProcess implements Runnable{
+    private PrintWriter out;
+    private BufferedReader in;
+    EventLogger eventLogger = new EventLogger();
     public void run() {
         System.out.println("Hello from a server thread!");
-        String sendToClientData = "Hello from the Server!";
         try {
-            ServerSocket srvr = new ServerSocket(1234);
+            String inputLine, otherPeerId;
+            ServerSocket serverSocket = new ServerSocket(portNumber);
+            Socket clientConnection = serverSocket.accept();
 
-            // After listening on a port
-            makeClient();
+            out = new PrintWriter(clientConnection.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(clientConnection.getInputStream()));
 
-            // Wait for anything trying to make a connection
-            Socket skt = srvr.accept();
-            System.out.print("A client has contacted me!\n");
+            otherPeerId = waitForHandshakes();
+            out.println(handshakeMessage);
+            UFTorrentProtocol protocol = new UFTorrentProtocol("server", otherPeerId);
 
-            // Object use to write data to a socket
-            PrintWriter out = new PrintWriter(skt.getOutputStream(), true);
-            System.out.print("Sending string to client: " + sendToClientData + "\n");
-
-            // Shove data out into the network through the socket.
-            out.print(sendToClientData);
+            while ((inputLine = in.readLine()) != null) {
+                System.out.println("From Client: " + inputLine);
+                if (inputLine.equals("Cya.")) {
+                    break;
+                }
+//                out.println(protocol.handleInput(inputLine));
+            }
 
             // Server cleanup procedure
             out.close();
-            skt.close();
-            srvr.close();
+            clientConnection.close();
+            serverSocket.close();
         }
         catch(Exception e) {
             System.out.print("Whoops! The Server quit unexpectedly!\n");
         }
     }
-    private void makeClient() {
-        Thread peerClient = new Thread(new PeerClient());
-        peerClient.start();
+
+    // Wait for Clients to send handshake
+    private String waitForHandshakes() {
+        try {
+            String fromClient;
+            while ((fromClient = in.readLine()) != null) {
+                System.out.println("Handshake From Client: " + fromClient);
+                if (fromClient.substring(0, 18).equals("P2PFILESHARINGPROJ")) {
+                    String otherPeerId = fromClient.substring(fromClient.length() - 4);
+                    eventLogger.logTCPConnectionFrom(otherPeerId);
+                    return otherPeerId;
+                }
+            }
+        }
+        catch(Exception e) {
+            System.out.print("Whoops! Server unexpectedly quit!\n");
+            exit(1);
+        }
+        return "Bye.";
     }
 }

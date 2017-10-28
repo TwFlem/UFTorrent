@@ -4,6 +4,24 @@ package com.uftorrent.app.utils;
 import java.io.File;
 
 public class Util {
+    // Calculate the size from a byte array
+    public int messageLengthFromInput(byte[] input) {
+        int sum = 0;
+        for (int i = 0; i < 4; i++) {
+            sum += input[i] * Math.pow(8, i);
+        }
+        return sum;
+    }
+
+    public byte[] subSectionOfByteArray(byte[] b, int start, int end) {
+        byte[] newByteArray = new byte[end - start];
+        for (int i = start; i < end; i++) {
+            newByteArray[i] = b[i];
+        }
+        return newByteArray;
+    }
+
+    // For logging
     public String catStringsFromArrayIntoCSV(String[] arrayOfStrings) {
         String temp = "";
         for (int i =0; i < arrayOfStrings.length; i++) {

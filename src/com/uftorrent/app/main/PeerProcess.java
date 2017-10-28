@@ -24,23 +24,23 @@ public class PeerProcess {
     protected static final PeerInfo peerInfo = new PeerInfo();
     protected static String peerId;
     protected static String hostName;
-    protected static String portNumber;
-    protected static String hasCompleteFile;
+    protected static int portNumber;
+    protected static boolean hasCompleteFile;
     protected static String handshakeMessage = "P2PFILESHARINGPROJ0000000000";
+    protected static String downloadFilePath;
+    protected static byte[] bitfield = {0, 0};
     protected static Util util = new Util();
     public static void main(String[] args) {
         clearOldProcessData(); //Deletes log files and peer downloaded files.
         initPeer(args); //Sets package variables regarding this peer.
-
         //Will make jUnit tests one day
         System.out.println("Here's our env variables!");
         commonVars.print();
         //testing for reading file
         System.out.println("Heres the file reader in action!");
         FilePiece[] filePieces = readFileIntoPiece("Common.cfg", 3);
-        for (int i = 0; i < filePieces.length; i++)
-        {
-            writeFilePiece("testing_log.txt", filePieces[i]);
+        for (int i = 0; i < filePieces.length; i++) {
+            writeFilePiece(downloadFilePath, filePieces[i]);
         }
         System.out.println("Here's all Peer Info!");
         peerInfo.print();
@@ -54,17 +54,20 @@ public class PeerProcess {
         System.out.format("ID: %s HostName: %s, PortNumber: %s, HasCompleteFile: %s%n",
                 peerId, hostName, portNumber, hasCompleteFile);
 
-        PeerClient connection = new PeerClient();
 
-        System.out.println("check out the sick logging class too!");
-        connection.simulateLogs();
-
+        // Start the Server thread
         Thread peerServer = new Thread(new PeerServer());
         peerServer.start();
+
+        // Start the Client thread
+        Thread peerClient = new Thread(new PeerClient());
+        peerClient.start();
+
+        // wait for the sever thread to finish
         try {
-            peerServer.join(5000);
-        } catch(Exception e) {
-            System.out.println("Server Quit Unexpectedly");
+            peerServer.join();
+        } catch (Exception e) {
+            System.out.println("Thread execution failed");
         }
     }
 
@@ -82,6 +85,17 @@ public class PeerProcess {
             portNumber = peerInfo.getPortNumber(peerId);
             hasCompleteFile = peerInfo.getHasCompleteFile(peerId);
 
+            // Create downloading Directory
+            File downloadDir = new File("peer_" + peerId);
+            System.out.println("creating directory: " + downloadDir.getName());
+            boolean createDirSuccessful = downloadDir.mkdir();
+
+            if (!createDirSuccessful) {
+                throw new SecurityException();
+            }
+            System.out.println(downloadDir.getPath());
+            downloadFilePath = downloadDir.getPath() + "/downloadFile";
+
         }
         catch (ArrayIndexOutOfBoundsException ex) {
             System.out.println("Invalid command line arguments. Please pass in a 4 digit PeerProcess ID.");
@@ -93,6 +107,10 @@ public class PeerProcess {
         }
         catch (NullPointerException ex) {
             System.out.println("Invalid peer ID: peer ID provided is not in the PeerProcess list.");
+            exit(1);
+        }
+        catch(SecurityException ex) {
+            System.out.println("There was a problem creating the download directory. Please remove any past downloading directories.");
             exit(1);
         }
     }
@@ -117,7 +135,7 @@ public class PeerProcess {
         }
     }
     //This method will read a file into an appropriate number of FilePieces, and return an array of these pieces
-    private static FilePiece[] readFileIntoPiece(String fileName, int pieceSize){
+    private static FilePiece[] readFileIntoPiece(String fileName, int pieceSize) {
         try {
             // Use this for reading the data.
             byte[] buffer = new byte[pieceSize];
@@ -133,8 +151,7 @@ public class PeerProcess {
             System.out.println("FILE READER INFO HERE");
             System.out.println(new String(data));
             */
-            for (int i = 0; i < pieceArray.length; i++)
-            {
+            for (int i = 0; i < pieceArray.length; i++) {
                 byte[] section = new byte[pieceSize];
 
                 pieceArray[i] = new FilePiece(Arrays.copyOfRange(data, i*pieceSize, i*3 + pieceSize), pieceSize);
@@ -166,7 +183,7 @@ public class PeerProcess {
     {
         try {
             byte[] bytes = piece.getFilePiece();
-            FileOutputStream fos = new FileOutputStream("testing_log.txt", true);
+            FileOutputStream fos = new FileOutputStream(fileName, true);
             fos.write(bytes);
             fos.close();
         }

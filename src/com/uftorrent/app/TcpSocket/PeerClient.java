@@ -1,29 +1,83 @@
 package com.uftorrent.app.TcpSocket;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import com.uftorrent.app.main.PeerProcess;
+
+import java.io.*;
 import java.net.Socket;
 
-public class PeerClient implements Runnable {
-    public PeerClient() {
-    }
+import static java.lang.System.exit;
+
+public class PeerClient extends PeerProcess implements Runnable {
+    private PrintStream out;
+    private DataInputStream in;
+    private EventLogger eventLogger = new EventLogger();
     public void run() {
         try {
             System.out.println("Hello from a client thread!");
-            Socket skt = new Socket("localhost", 1234);
-            BufferedReader in = new BufferedReader(new InputStreamReader(skt.getInputStream()));
+
+            String otherPeerId;
+            byte[] fromServer = new byte[100];
+
+
+            Socket socketToPeer = new Socket(hostName, portNumber);
+            out = new PrintStream(socketToPeer.getOutputStream(), true);
+            in = new DataInputStream(socketToPeer.getInputStream());
+
+            out.println(handshakeMessage);
+            otherPeerId = waitForHandshake();
+            UFTorrentProtocol protocol = new UFTorrentProtocol("client", otherPeerId);
+
+            out.println("Cya.");
+
+            byte[] initialBitfieldMessage = {0, 0, 0, 3, 5, bitfield[0], bitfield[1]};
+            out.print(initialBitfieldMessage);
+
+
+            while (true) {
+                int bytesRead = in.read(fromServer, 0, 4);
+                System.out.println("Server read: " + bytesRead);
+                byte[] newMessageLength = util.subSectionOfByteArray(fromServer, 0, 4);
+                int messageLenth = util.messageLengthFromInput(newMessageLength);
+                if (fromServer.equals("Bye.")) {
+                    break;
+                }
+                protocol.handleInput(fromServer);
+                out.println("Cya.");
+            }
 
             // Wait until the byte stream finishes reading bytes
-            while (!in.ready()) {}
-            System.out.println("Received string: " + in.readLine());
 
-            // Close reader
+            // Clean up
             in.close();
+            out.close();
+            socketToPeer.close();
         }
         catch(Exception e) {
             System.out.print("Whoops! Client unexpectedly quit!\n");
         }
     }
+
+    // Wait for server to send back handshake
+    private String waitForHandshake() {
+        try {
+            String fromServer;
+            while ((fromServer = in.readLine()) != null) {
+                System.out.println("Handshake From Server: " + fromServer);
+                if (fromServer.substring(0, 18).equals("P2PFILESHARINGPROJ")) {
+                    String otherPeerId = fromServer.substring(fromServer.length() - 4);
+                    eventLogger.logTCPConnectionTo(otherPeerId);
+                    return otherPeerId;
+                }
+            }
+        }
+        catch(Exception e) {
+            System.out.print("Whoops! Client unexpectedly quit!\n");
+            exit(1);
+        }
+        return "Cya.";
+    }
+
+    // Testing method for simulating log output
     public void simulateLogs() {
         EventLogger logger = new EventLogger();
         String[] prefferedNeighbors = {"1000", "1001", "1002"};
