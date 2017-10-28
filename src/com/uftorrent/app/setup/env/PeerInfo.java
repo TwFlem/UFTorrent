@@ -52,4 +52,14 @@ public class PeerInfo {
     public boolean getHasCompleteFile(String id) {
         return this.peerInfo.get(id)[2].equals("0");
     }
+    public void setHasCompleteFile(String peerId, boolean hasCompleteFile) {
+        String[] currentPeerValues = this.peerInfo.get(peerId);
+        if (hasCompleteFile) {
+            currentPeerValues[2] = "1";
+            this.peerInfo.put(peerId, currentPeerValues);
+            return;
+        }
+        currentPeerValues[2] = "0";
+        this.peerInfo.put(peerId, currentPeerValues);
+    }
 }

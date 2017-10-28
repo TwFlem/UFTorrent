@@ -38,6 +38,7 @@ public class UFTorrentProtocol extends PeerProcess {
             case 4:
                 break;
             case 5:
+                handleBitField(payload);
                 break;
             case 6:
                 break;
@@ -49,6 +50,7 @@ public class UFTorrentProtocol extends PeerProcess {
         }
         return response;
     }
+    // Handhsake message
     private String handleHandshake(String newHandShake) {
         this.otherPeerId = newHandShake.substring(newHandShake.length() - 4);
         if (this.handlingType.equals("server")) {
@@ -58,5 +60,12 @@ public class UFTorrentProtocol extends PeerProcess {
             eventLogger.logTCPConnectionTo(this.otherPeerId);
             return "Cya.";
         }
+    }
+    // Message type 5: bitfield
+    private String handleBitField(String newBitField) {
+        if (newBitField.equals("1111111111111111")) {
+            peerInfo.setHasCompleteFile(otherPeerId, true);
+        }
+        return "Cya.";
     }
 }
