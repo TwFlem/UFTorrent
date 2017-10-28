@@ -1,30 +1,20 @@
 package com.uftorrent.app.TcpSocket;
 
+import com.uftorrent.app.main.PeerProcess;
+
 import java.io.*;
 import java.net.Socket;
 
-public class PeerClient implements Runnable {
-    private String peerId;
-    private String hostName;
-    private String portNumber;
-    private String hasCompleteFile;
-    private String handshakeMessage;
+public class PeerClient extends PeerProcess implements Runnable {
     private PrintStream out;
     private DataInputStream in;
-    public PeerClient(String peerId, String hostName, String portNumber, String hasCompleteFile, String handshakeMessage) {
-        this.peerId = peerId;
-        this.hostName = hostName;
-        this.portNumber  = portNumber;
-        this.hasCompleteFile = hasCompleteFile;
-        this.handshakeMessage = handshakeMessage;
-    }
     public void run() {
         try {
             System.out.println("Hello from a client thread!");
 
             String fromServer;
 
-            Socket socketToPeer = new Socket(this.hostName, Integer.parseInt(this.portNumber));
+            Socket socketToPeer = new Socket(hostName, portNumber);
             UFTorrentProtocol protocol = new UFTorrentProtocol("client");
             out = new PrintStream(socketToPeer.getOutputStream(), true);
             in = new DataInputStream(socketToPeer.getInputStream());

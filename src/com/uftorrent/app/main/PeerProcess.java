@@ -24,10 +24,11 @@ public class PeerProcess {
     protected static final PeerInfo peerInfo = new PeerInfo();
     protected static String peerId;
     protected static String hostName;
-    protected static String portNumber;
-    protected static String hasCompleteFile;
+    protected static int portNumber;
+    protected static boolean hasCompleteFile;
     protected static String handshakeMessage = "P2PFILESHARINGPROJ0000000000";
     protected static String downloadFilePath;
+    protected static String bitfield = "0000";
     protected static Util util = new Util();
     public static void main(String[] args) {
         clearOldProcessData(); //Deletes log files and peer downloaded files.
@@ -55,19 +56,11 @@ public class PeerProcess {
 
 
         // Start the Server thread
-        Thread peerServer = new Thread(new PeerServer(peerId,
-                hostName,
-                portNumber,
-                hasCompleteFile,
-                handshakeMessage));
+        Thread peerServer = new Thread(new PeerServer());
         peerServer.start();
 
         // Start the Client thread
-        Thread peerClient = new Thread(new PeerClient(peerId,
-                hostName,
-                portNumber,
-                hasCompleteFile,
-                handshakeMessage));
+        Thread peerClient = new Thread(new PeerClient());
         peerClient.start();
 
         // wait for the sever thread to finish
