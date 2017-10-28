@@ -1,5 +1,7 @@
 .idea
-
+.idea/workspace.xml
 .idea/workspace.xml
 
-.idea/workspace.xml
+*.log
+testing_log.txt
+peer_*

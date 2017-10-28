@@ -1,4 +1,4 @@
-package com.uftorrent.exceptions;
+package com.uftorrent.app.exceptions;
 
 public class InvalidPeerID extends Exception {
     private static String TAG = "Invalid peer ID: ";

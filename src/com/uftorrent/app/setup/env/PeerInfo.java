@@ -1,6 +1,7 @@
-package com.uftorrent.app;
+package com.uftorrent.app.setup.env;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.io.FileReader;
@@ -21,9 +22,10 @@ public class PeerInfo {
 
             while((line = bufferedReader.readLine()) != null) {
                 // The first element of this array is the peer's ID
-                String[] peerInfoIDKeyAndValues = line.split("=");
-                String[] peerInfoValues = peerInfoIDKeyAndValues[1].split(",");
-                this.peerInfo.put(peerInfoIDKeyAndValues[0], peerInfoValues);
+                String[] parsedPeerInfo = line.split(" ");
+                String currentPeerId = parsedPeerInfo[0];
+                String[] currentPeerValues = Arrays.copyOfRange(parsedPeerInfo, 1, parsedPeerInfo.length);
+                this.peerInfo.put(currentPeerId, currentPeerValues);
             }
             bufferedReader.close();
         }
@@ -44,10 +46,20 @@ public class PeerInfo {
     public String getHostName(String id) {
         return this.peerInfo.get(id)[0];
     }
-    public String getPortNumber(String id) {
-        return this.peerInfo.get(id)[1];
+    public int getPortNumber(String id) {
+        return Integer.parseInt(this.peerInfo.get(id)[1]);
     }
-    public String getHasCompleteFile(String id) {
-        return this.peerInfo.get(id)[2];
+    public boolean getHasCompleteFile(String id) {
+        return this.peerInfo.get(id)[2].equals("0");
+    }
+    public void setHasCompleteFile(String peerId, boolean hasCompleteFile) {
+        String[] currentPeerValues = this.peerInfo.get(peerId);
+        if (hasCompleteFile) {
+            currentPeerValues[2] = "1";
+            this.peerInfo.put(peerId, currentPeerValues);
+            return;
+        }
+        currentPeerValues[2] = "0";
+        this.peerInfo.put(peerId, currentPeerValues);
     }
 }
