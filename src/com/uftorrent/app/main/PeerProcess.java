@@ -28,7 +28,7 @@ public class PeerProcess {
     protected static boolean hasCompleteFile;
     protected static String handshakeMessage = "P2PFILESHARINGPROJ0000000000";
     protected static String downloadFilePath;
-    protected static String bitfield = "0000";
+    protected static byte[] bitfield = {0, 0};
     protected static Util util = new Util();
     public static void main(String[] args) {
         clearOldProcessData(); //Deletes log files and peer downloaded files.

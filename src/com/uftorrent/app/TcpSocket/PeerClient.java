@@ -5,6 +5,8 @@ import com.uftorrent.app.main.PeerProcess;
 import java.io.*;
 import java.net.Socket;
 
+import static java.lang.System.exit;
+
 public class PeerClient extends PeerProcess implements Runnable {
     private PrintStream out;
     private DataInputStream in;
@@ -12,14 +14,17 @@ public class PeerClient extends PeerProcess implements Runnable {
         try {
             System.out.println("Hello from a client thread!");
 
-            String fromServer;
+            String fromServer, otherPeerId;
+
 
             Socket socketToPeer = new Socket(hostName, portNumber);
-            UFTorrentProtocol protocol = new UFTorrentProtocol("client");
             out = new PrintStream(socketToPeer.getOutputStream(), true);
             in = new DataInputStream(socketToPeer.getInputStream());
 
             out.println(handshakeMessage);
+            otherPeerId = waitForHandshake();
+            UFTorrentProtocol protocol = new UFTorrentProtocol("client", otherPeerId);
+
 
             while ((fromServer = in.readLine()) != null) {
                 System.out.println("From Server: " + fromServer);
@@ -41,6 +46,24 @@ public class PeerClient extends PeerProcess implements Runnable {
         catch(Exception e) {
             System.out.print("Whoops! Client unexpectedly quit!\n");
         }
+    }
+
+    // Wait for server to send back handshake
+    private String waitForHandshake() {
+        try {
+            String fromServer;
+            while ((fromServer = in.readLine()) != null) {
+                System.out.println("Handshake From Server: " + fromServer);
+                if (fromServer.contains("P2PFILESHARINGPROJ")) {
+                    return fromServer.substring(fromServer.length() - 4);
+                }
+            }
+        }
+        catch(Exception e) {
+            System.out.print("Whoops! Client unexpectedly quit!\n");
+            exit(1);
+        }
+        return "Cya.";
     }
 
     // Testing method for simulating log output

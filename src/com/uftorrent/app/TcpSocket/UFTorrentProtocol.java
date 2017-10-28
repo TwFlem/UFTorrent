@@ -4,21 +4,13 @@ import com.uftorrent.app.main.PeerProcess;
 
 public class UFTorrentProtocol extends PeerProcess {
     private String handlingType;
-    private String peerID;
     private String otherPeerId;
     private EventLogger eventLogger = new EventLogger();
-    public UFTorrentProtocol(String handlingType) {
+    public UFTorrentProtocol(String handlingType, String otherPeerId) {
         this.handlingType = handlingType;
+        this.otherPeerId = otherPeerId;
     }
     public String handleInput(String input) {
-
-        if (input.charAt(4) == 'I') {
-            return handleHandshake(input);
-        }
-
-        if (this.otherPeerId == null) {
-            return "Send me a handshake first, then let's talk.";
-        }
 
         String messageLength = input.substring(0, 3);
         int messageType = Character.getNumericValue(input.charAt(4));
@@ -50,17 +42,7 @@ public class UFTorrentProtocol extends PeerProcess {
         }
         return response;
     }
-    // Handhsake message
-    private String handleHandshake(String newHandShake) {
-        this.otherPeerId = newHandShake.substring(newHandShake.length() - 4);
-        if (this.handlingType.equals("server")) {
-            eventLogger.logTCPConnectionFrom(this.otherPeerId);
-            return handshakeMessage;
-        } else {
-            eventLogger.logTCPConnectionTo(this.otherPeerId);
-            return "Cya.";
-        }
-    }
+
     // Message type 5: bitfield
     private String handleBitField(String newBitField) {
         if (newBitField.equals("1111111111111111")) {
