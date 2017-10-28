@@ -15,7 +15,8 @@ public class PeerClient extends PeerProcess implements Runnable {
         try {
             System.out.println("Hello from a client thread!");
 
-            String fromServer, otherPeerId;
+            String otherPeerId;
+            byte[] fromServer = new byte[100];
 
 
             Socket socketToPeer = new Socket(hostName, portNumber);
@@ -26,11 +27,18 @@ public class PeerClient extends PeerProcess implements Runnable {
             otherPeerId = waitForHandshake();
             UFTorrentProtocol protocol = new UFTorrentProtocol("client", otherPeerId);
 
+            out.println("Cya.");
 
-            while ((fromServer = in.readLine()) != null) {
-                System.out.println("From Server: " + fromServer);
-                if (fromServer.equals("Bye.")
-                        || fromServer.equals("Send me a handshake first, then let's talk.")) {
+            byte[] initialBitfieldMessage = {0, 0, 0, 3, 5, bitfield[0], bitfield[1]};
+            out.print(initialBitfieldMessage);
+
+
+            while (true) {
+                int bytesRead = in.read(fromServer, 0, 4);
+                System.out.println("Server read: " + bytesRead);
+                byte[] newMessageLength = util.subSectionOfByteArray(fromServer, 0, 4);
+                int messageLenth = util.messageLengthFromInput(newMessageLength);
+                if (fromServer.equals("Bye.")) {
                     break;
                 }
                 protocol.handleInput(fromServer);

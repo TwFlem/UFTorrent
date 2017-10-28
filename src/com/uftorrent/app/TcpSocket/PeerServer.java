@@ -16,7 +16,7 @@ public class PeerServer extends PeerProcess implements Runnable{
     public void run() {
         System.out.println("Hello from a server thread!");
         try {
-            String inputLine, outputLine, otherPeerId;
+            String inputLine, otherPeerId;
             ServerSocket serverSocket = new ServerSocket(portNumber);
             Socket clientConnection = serverSocket.accept();
 
@@ -32,8 +32,7 @@ public class PeerServer extends PeerProcess implements Runnable{
                 if (inputLine.equals("Cya.")) {
                     break;
                 }
-                outputLine = protocol.handleInput(inputLine);
-                out.println(outputLine);
+//                out.println(protocol.handleInput(inputLine));
             }
 
             // Server cleanup procedure
