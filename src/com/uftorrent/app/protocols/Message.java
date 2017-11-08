@@ -1,8 +1,10 @@
 package com.uftorrent.app.protocols;
 
+import com.uftorrent.app.main.PeerProcess;
+
 import java.util.Arrays;
 
-public class Message {
+public class Message extends PeerProcess {
     public final int DATA_CHOKE = 0;
     public final int DATA_UNCHOKE = 1;
     public final int DATA_INTERESTED = 2;
@@ -17,7 +19,7 @@ public class Message {
     private byte[] data;
     private byte messageType;
     //------------------Constructors  down here ----------------------------------------------------
-    public Message(int messageLength, byte[] data, byte messageType) {
+    public Message(int messageLength, byte messageType, byte[] data) {
         this.messageLength = messageLength;
         this.data = data;
         this.messageType = messageType;
@@ -77,6 +79,31 @@ public class Message {
             System.out.println("This isn't a valid message type to have a Piece Index");
         }
         return pieceIndex;
+    }
+    public byte[] msgToByteArray() {
+        byte[] sizeHeader = util.intToByteArray(this.messageLength);
+        byte[] msgAsByteArry = new byte[sizeHeader.length + 1 + this.data.length];
+
+        for (int i = 0; i < sizeHeader.length; i++) {
+            msgAsByteArry[i] = sizeHeader[i];
+        }
+
+        msgAsByteArry[sizeHeader.length] = this.messageType;
+
+        for (int i = sizeHeader.length + 1; i < this.data.length; i++) {
+            msgAsByteArry[i] = this.data[i];
+        }
+
+        System.out.print("msg as byte array: ");
+
+        for (int i = 0; i < msgAsByteArry.length; i++) {
+            System.out.printf("0x%x ", msgAsByteArry[i]);
+        }
+
+        System.out.print("\n");
+
+        return msgAsByteArry;
+
     }
 }
 

@@ -1,58 +1,57 @@
 package com.uftorrent.app.TcpSocket;
 
 import com.uftorrent.app.main.PeerProcess;
+import com.uftorrent.app.protocols.Message;
 import com.uftorrent.app.utils.Util;
 
 import java.util.Arrays;
 
-public class UFTorrentProtocol extends PeerProcess {
+public class UFTorrentServerProtocol extends PeerProcess {
     private String handlingType;
     private String otherPeerId;
     private EventLogger eventLogger = new EventLogger();
     private Util util = new Util();
-    public UFTorrentProtocol(String handlingType, String otherPeerId) {
+    public UFTorrentServerProtocol(String handlingType, String otherPeerId) {
         this.handlingType = handlingType;
         this.otherPeerId = otherPeerId;
     }
-    public String handleInput(byte[] input) {
+    public Message handleInput(byte msgType, byte[] recievedPayload) {
 
-        int messageType = input[4];
-        byte[] payload = payloadFromInput(input);
-
-        String response = "";
-
-        switch(messageType) {
-            case 0:
+        switch(msgType) {
+            case 0x0:
                 break;
-            case 1:
+            case 0x1:
                 break;
-            case 2:
+            case 0x2:
                 break;
-            case 3:
+            case 0x3:
                 break;
-            case 4:
+            case 0x4:
                 break;
-            case 5:
-                return handleBitField(payload);
-            case 6:
+            case 0x5:
+                return handleBitField(recievedPayload);
+            case 0x6:
                 break;
-            case 7:
+            case 0x7:
                 break;
             default:
-                response = handshakeMessage;
                 break;
         }
-        return response;
+        return handleBitField(recievedPayload);
     }
 
     // Message type 5: bitfield
-    private String handleBitField(byte[] newBitField) {
+    private Message handleBitField(byte[] recievedBitfield) {
         byte[] completedBitField = {7, 7};
-        if (Arrays.equals(completedBitField, newBitField)) {
+        byte[] emptyBitfield = {0, 0};
+        if (Arrays.equals(completedBitField, recievedBitfield)) {
             peerInfo.setHasCompleteFile(otherPeerId, true);
-            return "Cya.";
         }
-        return "Cya.";
+        if (Arrays.equals(completedBitField, recievedBitfield)) {
+            // TODO: tw, How do we handle an empty bitfield?
+            return new Message(3, (byte)0x5, bitfield);
+        }
+        return new Message(3, (byte)0x5, bitfield);
     }
 
     // Return the payload of a message

@@ -2,6 +2,10 @@ package com.uftorrent.app.utils;
 
 
 import java.io.File;
+import java.lang.reflect.Array;
+import java.nio.ByteBuffer;
+
+import static java.lang.System.exit;
 
 public class Util {
     // Calculate the size from a byte array
@@ -47,5 +51,15 @@ public class Util {
         } else {
             file.delete();
         }
+    }
+    public int packetSize(byte[] arr) {
+        int size = 0;
+        for (int i = 0; i < arr.length; i++) {
+            size = size + arr[arr.length - i - 1] * (int)Math.pow(16, i);
+        }
+        return size;
+    }
+    public byte[] intToByteArray(int i) {
+        return ByteBuffer.allocate(4).putInt(i).array();
     }
 }

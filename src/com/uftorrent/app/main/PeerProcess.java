@@ -85,6 +85,11 @@ public class PeerProcess {
             portNumber = peerInfo.getPortNumber(peerId);
             hasCompleteFile = peerInfo.getHasCompleteFile(peerId);
 
+            if (hasCompleteFile) {
+                bitfield[0] = 0xf;
+                bitfield[1] = 0xf;
+            }
+
             // Create downloading Directory
             File downloadDir = new File("peer_" + peerId);
             System.out.println("creating directory: " + downloadDir.getName());

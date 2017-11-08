@@ -8,52 +8,53 @@ import java.net.Socket;
 import static java.lang.System.exit;
 
 public class PeerClient extends PeerProcess implements Runnable {
-    private PrintStream out;
-    private DataInputStream in;
+    private PrintStream handOut;
+    private DataInputStream handIn;
+    private InputStream bytesIn;
+    private OutputStream bytesOut;
     private EventLogger eventLogger = new EventLogger();
     public void run() {
         try {
             System.out.println("Hello from a client thread!");
 
             String otherPeerId;
-            byte[] fromServer = new byte[100];
 
 
             Socket socketToPeer = new Socket(hostName, portNumber);
-            out = new PrintStream(socketToPeer.getOutputStream(), true);
-            in = new DataInputStream(socketToPeer.getInputStream());
+            handOut = new PrintStream(socketToPeer.getOutputStream(), true);
+            handIn = new DataInputStream(socketToPeer.getInputStream());
 
-            out.println(handshakeMessage);
+            handOut.println(handshakeMessage);
             otherPeerId = waitForHandshake();
-            UFTorrentProtocol protocol = new UFTorrentProtocol("client", otherPeerId);
 
-            out.println("Cya.");
 
-            byte[] initialBitfieldMessage = {0, 0, 0, 3, 5, bitfield[0], bitfield[1]};
-            out.print(initialBitfieldMessage);
+            bytesIn = socketToPeer.getInputStream();
+            bytesOut = socketToPeer.getOutputStream();
+
+            UFTorrentClientProtocol protocol = new UFTorrentClientProtocol("client", otherPeerId);
+
+            byte[] initialBitfieldMessage = {0x0, 0x0, 0x0, 0x3, 0x5, bitfield[0], bitfield[1]};
+            bytesOut.write(initialBitfieldMessage);
 
 
             while (true) {
-                int bytesRead = in.read(fromServer, 0, 4);
-                System.out.println("Server read: " + bytesRead);
-                byte[] newMessageLength = util.subSectionOfByteArray(fromServer, 0, 4);
-                int messageLenth = util.messageLengthFromInput(newMessageLength);
-                if (fromServer.equals("Bye.")) {
+                byte[] sizeHeaderFromServer = new byte[4];
+                int bytesRead = bytesIn.read(sizeHeaderFromServer, 0, 4);
+                int messageSize = util.packetSize(sizeHeaderFromServer);
+                System.out.println("Size of message From Server: " + messageSize);
+                if (sizeHeaderFromServer.equals("Bye.")) {
                     break;
                 }
-                protocol.handleInput(fromServer);
-                out.println("Cya.");
+                protocol.handleInput(sizeHeaderFromServer);
             }
 
             // Wait until the byte stream finishes reading bytes
 
             // Clean up
-            in.close();
-            out.close();
             socketToPeer.close();
         }
         catch(Exception e) {
-            System.out.print("Whoops! Client unexpectedly quit!\n");
+            System.out.print("Whoops! Client unexpectedly quit!\n" + e + "\n");
         }
     }
 
@@ -61,8 +62,8 @@ public class PeerClient extends PeerProcess implements Runnable {
     private String waitForHandshake() {
         try {
             String fromServer;
-            while ((fromServer = in.readLine()) != null) {
-                System.out.println("Handshake From Server: " + fromServer);
+            while ((fromServer = handIn.readLine()) != null) {
+                System.out.println("Handshake Read From Server: " + fromServer);
                 if (fromServer.substring(0, 18).equals("P2PFILESHARINGPROJ")) {
                     String otherPeerId = fromServer.substring(fromServer.length() - 4);
                     eventLogger.logTCPConnectionTo(otherPeerId);
