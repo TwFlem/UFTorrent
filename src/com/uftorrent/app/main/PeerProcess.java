@@ -28,7 +28,7 @@ public class PeerProcess {
     protected static boolean hasCompleteFile;
     protected static String handshakeMessage = "P2PFILESHARINGPROJ0000000000";
     protected static String downloadFilePath;
-    protected static byte[] bitfield = {0, 0};
+    protected static byte[] bitfield;
     protected static Util util = new Util();
     public static void main(String[] args) {
         clearOldProcessData(); //Deletes log files and peer downloaded files.
@@ -44,10 +44,6 @@ public class PeerProcess {
         }
         System.out.println("Here's all Peer Info!");
         peerInfo.print();
-
-        //Testing get methods
-        System.out.format("Number of preferred neighbors: %s%n", commonVars.get("NumberOfPreferredNeighbors"));
-        System.out.format("ID's: %s hostName: %s%n", "1004", peerInfo.getHostName("1004"));
 
         //Display this peer's info
         System.out.println("Here's this Peer's Info!");
@@ -84,10 +80,13 @@ public class PeerProcess {
             hostName = peerInfo.getHostName(peerId);
             portNumber = peerInfo.getPortNumber(peerId);
             hasCompleteFile = peerInfo.getHasCompleteFile(peerId);
+            bitfield = new byte[commonVars.getNumberOfPieces()/8 + 1];
+            System.out.println("Size of bitfield: " + bitfield.length);
 
             if (hasCompleteFile) {
-                bitfield[0] = 0xf;
-                bitfield[1] = 0xf;
+               for (int i = 0; i < bitfield.length; i++) {
+                   bitfield[i] = 0x7f;
+               }
             }
 
             // Create downloading Directory

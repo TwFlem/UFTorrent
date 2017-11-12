@@ -35,18 +35,21 @@ public class PeerServer extends PeerProcess implements Runnable{
 
             while (true) {
                 byte[] sizeHeaderFromClient = new byte[4];
-                int bytesRead = bytesIn.read(sizeHeaderFromClient, 0, 4);
+                byte[] msgType = new byte[1];
+                int bytesRead;
+
+                bytesIn.read(sizeHeaderFromClient, 0, 4);
                 int messageSize = util.packetSize(sizeHeaderFromClient);
                 System.out.println("Size of message From Client: " + messageSize);
 
-                byte msgType = (byte)bytesIn.read(sizeHeaderFromClient, 0, 1);
-                System.out.println("Message type of client: " + msgType);
+                bytesIn.read(msgType, 0, 1);
+                System.out.println("Message type of client: " + msgType[0]);
 
                 byte[] msgBody = new byte[messageSize - 1];
                 bytesRead = bytesIn.read(msgBody, 0, msgBody.length);
-                System.out.println("Message body bytes read from client: " + bytesRead);
+                System.out.println("# of payload bytes read from client: " + bytesRead);
 
-                bytesOut.write(protocol.handleInput(msgType, msgBody).msgToByteArray());
+                bytesOut.write(protocol.handleInput(msgType[0], msgBody).msgToByteArray());
 
                 if (sizeHeaderFromClient[0] == 'z') {
                     break;

@@ -42,13 +42,13 @@ public class UFTorrentServerProtocol extends PeerProcess {
 
     // Message type 5: bitfield
     private Message handleBitField(byte[] recievedBitfield) {
-        byte[] completedBitField = {7, 7};
-        byte[] emptyBitfield = {0, 0};
-        if (Arrays.equals(completedBitField, recievedBitfield)) {
+        byte[] emptyBitfield = new byte[bitfield.length];
+        byte[] completeBitField = util.getCompleteBitfield(bitfield.length);
+        if (Arrays.equals(completeBitField, recievedBitfield)) {
             peerInfo.setHasCompleteFile(otherPeerId, true);
         }
-        if (Arrays.equals(completedBitField, recievedBitfield)) {
-            // TODO: tw, How do we handle an empty bitfield?
+        if (Arrays.equals(emptyBitfield, recievedBitfield)) {
+            // TODO: tw, How do we handle an empty bitfield? S
             return new Message(3, (byte)0x5, bitfield);
         }
         return new Message(3, (byte)0x5, bitfield);

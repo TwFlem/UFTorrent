@@ -62,4 +62,11 @@ public class Util {
     public byte[] intToByteArray(int i) {
         return ByteBuffer.allocate(4).putInt(i).array();
     }
+    public byte[] getCompleteBitfield(int size) {
+        byte[] completeBitField = new byte[size];
+        for(int i = 0; i < completeBitField.length; i++) {
+            completeBitField[i] = 127;
+        }
+        return completeBitField;
+    }
 }

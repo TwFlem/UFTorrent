@@ -2,8 +2,6 @@ package com.uftorrent.app.protocols;
 
 import com.uftorrent.app.main.PeerProcess;
 
-import java.util.Arrays;
-
 public class Message extends PeerProcess {
     public final int DATA_CHOKE = 0;
     public final int DATA_UNCHOKE = 1;
@@ -90,8 +88,9 @@ public class Message extends PeerProcess {
 
         msgAsByteArry[sizeHeader.length] = this.messageType;
 
-        for (int i = sizeHeader.length + 1; i < this.data.length; i++) {
-            msgAsByteArry[i] = this.data[i];
+
+        for (int i = 0; i < this.data.length; i++) {
+            msgAsByteArry[i + sizeHeader.length + 1] = this.data[i];
         }
 
         System.out.print("msg as byte array: ");

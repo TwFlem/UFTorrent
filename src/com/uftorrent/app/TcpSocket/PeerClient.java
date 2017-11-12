@@ -1,6 +1,7 @@
 package com.uftorrent.app.TcpSocket;
 
 import com.uftorrent.app.main.PeerProcess;
+import com.uftorrent.app.protocols.Message;
 
 import java.io.*;
 import java.net.Socket;
@@ -33,8 +34,8 @@ public class PeerClient extends PeerProcess implements Runnable {
 
             UFTorrentClientProtocol protocol = new UFTorrentClientProtocol("client", otherPeerId);
 
-            byte[] initialBitfieldMessage = {0x0, 0x0, 0x0, 0x3, 0x5, bitfield[0], bitfield[1]};
-            bytesOut.write(initialBitfieldMessage);
+            Message initialBitfieldMessage = new Message(bitfield.length + 1, (byte)5, bitfield);
+            bytesOut.write(initialBitfieldMessage.msgToByteArray());
 
 
             while (true) {

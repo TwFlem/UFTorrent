@@ -50,7 +50,7 @@ public class PeerInfo {
         return Integer.parseInt(this.peerInfo.get(id)[1]);
     }
     public boolean getHasCompleteFile(String id) {
-        return this.peerInfo.get(id)[2].equals("0");
+        return this.peerInfo.get(id)[2].equals("1");
     }
     public void setHasCompleteFile(String peerId, boolean hasCompleteFile) {
         String[] currentPeerValues = this.peerInfo.get(peerId);
