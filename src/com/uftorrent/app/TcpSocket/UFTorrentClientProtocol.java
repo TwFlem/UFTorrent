@@ -10,17 +10,19 @@ public class UFTorrentClientProtocol extends PeerProcess {
     private String otherPeerId;
     private EventLogger eventLogger = new EventLogger();
     private Util util = new Util();
+
     public UFTorrentClientProtocol(String handlingType, String otherPeerId) {
         this.handlingType = handlingType;
         this.otherPeerId = otherPeerId;
     }
+
     public String handleInput(byte[] input) {
 
         int messageType = input[4];
 
         String response = "";
 
-        switch(messageType) {
+        switch (messageType) {
             case 0:
                 break;
             case 1:
@@ -53,5 +55,10 @@ public class UFTorrentClientProtocol extends PeerProcess {
         }
         return "Cya.";
     }
-}
 
+    //message type 7: request
+    private String handleRequest(byte[] requestMessage) {
+        return "something";
+
+    }
+}
