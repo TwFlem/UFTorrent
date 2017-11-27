@@ -32,21 +32,33 @@ public class PeerClient extends PeerProcess implements Runnable {
             bytesIn = socketToPeer.getInputStream();
             bytesOut = socketToPeer.getOutputStream();
 
-            UFTorrentClientProtocol protocol = new UFTorrentClientProtocol("client", otherPeerId);
+            UFTorrentClientProtocol protocol = new UFTorrentClientProtocol();
 
             Message initialBitfieldMessage = new Message(bitfield.length + 1, (byte)5, bitfield);
             bytesOut.write(initialBitfieldMessage.msgToByteArray());
 
 
             while (true) {
-                byte[] sizeHeaderFromServer = new byte[4];
-                int bytesRead = bytesIn.read(sizeHeaderFromServer, 0, 4);
-                int messageSize = util.packetSize(sizeHeaderFromServer);
-                System.out.println("Size of message From Server: " + messageSize);
-                if (sizeHeaderFromServer.equals("Bye.")) {
+                byte[] sizeHeaderFromClient = new byte[4];
+                byte[] msgType = new byte[1];
+                int bytesRead;
+
+                bytesIn.read(sizeHeaderFromClient, 0, 4);
+                int messageSize = util.packetSize(sizeHeaderFromClient);
+                System.out.println("Size of message From Client: " + messageSize);
+
+                bytesIn.read(msgType, 0, 1);
+                System.out.println("Message type of client: " + msgType[0]);
+
+                byte[] msgBody = new byte[messageSize - 1];
+                bytesRead = bytesIn.read(msgBody, 0, msgBody.length);
+                System.out.println("# of payload bytes read from client: " + bytesRead);
+
+                bytesOut.write(protocol.handleInput(msgType[0], msgBody).msgToByteArray());
+
+                if (msgType[0] == 0x05) {
                     break;
                 }
-                protocol.handleInput(sizeHeaderFromServer);
             }
 
             // Wait until the byte stream finishes reading bytes

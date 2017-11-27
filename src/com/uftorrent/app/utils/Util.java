@@ -66,4 +66,11 @@ public class Util {
         }
         return completeBitField;
     }
+    public byte intToBigEndianBitChunk(int i) {
+        int sum = 0;
+        for (int k = 0; k < i + 1; k++) {
+            sum += 1 * Math.pow(2, 8 - k);
+        }
+        return (byte)sum;
+    }
 }

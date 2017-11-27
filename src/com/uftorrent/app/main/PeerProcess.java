@@ -29,6 +29,8 @@ public class PeerProcess {
     protected static String handshakeMessage = "P2PFILESHARINGPROJ0000000000";
     protected static String downloadFilePath;
     protected static byte[] bitfield;
+    protected static byte[] fullBitfield;
+    protected static byte[] emptyBitfiled;
     protected static Util util = new Util();
     public static void main(String[] args) {
         clearOldProcessData(); //Deletes log files and peer downloaded files.
@@ -80,13 +82,30 @@ public class PeerProcess {
             hostName = peerInfo.getHostName(peerId);
             portNumber = peerInfo.getPortNumber(peerId);
             hasCompleteFile = peerInfo.getHasCompleteFile(peerId);
-            bitfield = new byte[commonVars.getNumberOfPieces()/8 + 1];
+            int sizeOfBitfield = commonVars.getNumberOfPieces()/8 + 1;
+            int numOfBitsForLastPiece = commonVars.getNumberOfPieces() - (sizeOfBitfield - 1) * 8;
+            bitfield = new byte[sizeOfBitfield];
+            emptyBitfiled = new byte[sizeOfBitfield];
+            fullBitfield = new byte[sizeOfBitfield];
             System.out.println("Size of bitfield: " + bitfield.length);
 
             if (hasCompleteFile) {
-               for (int i = 0; i < bitfield.length; i++) {
-                   bitfield[i] = 0x7f;
+               for (int i = 0; i < bitfield.length - 1; i++) {
+                   bitfield[i] = -1;
                }
+               bitfield[bitfield.length -1] = util.intToBigEndianBitChunk(numOfBitsForLastPiece);
+            } else {
+                for (int i = 0; i < bitfield.length - 1; i++) {
+                    bitfield[i] = 0x00;
+                }
+            }
+
+            for (int i = 0; i < bitfield.length; i++) {
+                fullBitfield[i] = -1;
+            }
+
+            for (int i = 0; i < emptyBitfiled.length; i++) {
+                fullBitfield[i] = 0x00;
             }
 
             // Create downloading Directory

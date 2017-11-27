@@ -31,7 +31,7 @@ public class PeerServer extends PeerProcess implements Runnable{
 
             bytesIn = clientConnection.getInputStream();
             bytesOut = clientConnection.getOutputStream();
-            UFTorrentServerProtocol protocol = new UFTorrentServerProtocol("server", otherPeerId);
+            UFTorrentServerProtocol protocol = new UFTorrentServerProtocol();
 
             while (true) {
                 byte[] sizeHeaderFromClient = new byte[4];
@@ -54,7 +54,6 @@ public class PeerServer extends PeerProcess implements Runnable{
                 if (sizeHeaderFromClient[0] == 'z') {
                     break;
                 }
-//                handOut.println(protocol.handleInput(inputLine));
             }
 
             // Server cleanup procedure

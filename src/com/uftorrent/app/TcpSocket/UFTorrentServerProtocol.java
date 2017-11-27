@@ -11,10 +11,6 @@ public class UFTorrentServerProtocol extends PeerProcess {
     private String otherPeerId;
     private EventLogger eventLogger = new EventLogger();
     private Util util = new Util();
-    public UFTorrentServerProtocol(String handlingType, String otherPeerId) {
-        this.handlingType = handlingType;
-        this.otherPeerId = otherPeerId;
-    }
     public Message handleInput(byte msgType, byte[] recievedPayload) {
 
         switch(msgType) {
@@ -48,10 +44,10 @@ public class UFTorrentServerProtocol extends PeerProcess {
             peerInfo.setHasCompleteFile(otherPeerId, true);
         }
         if (Arrays.equals(emptyBitfield, recievedBitfield)) {
-            // TODO: tw, How do we handle an empty bitfield? S
-            return new Message(3, (byte)0x5, bitfield);
+            // TODO: tw, How do we handle an empty bitfield?
+            return new Message(bitfield.length + 1, (byte)0x5, bitfield);
         }
-        return new Message(3, (byte)0x5, bitfield);
+        return new Message(bitfield.length + 1, (byte)0x5, bitfield);
     }
 
     // Return the payload of a message
