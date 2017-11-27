@@ -53,11 +53,8 @@ public class Util {
         }
     }
     public int packetSize(byte[] arr) {
-        int size = 0;
-        for (int i = 0; i < arr.length; i++) {
-            size = size + arr[arr.length - i - 1] * (int)Math.pow(16, i);
-        }
-        return size;
+        ByteBuffer wrapped = ByteBuffer.wrap(arr);
+        return wrapped.getInt();
     }
     public byte[] intToByteArray(int i) {
         return ByteBuffer.allocate(4).putInt(i).array();
