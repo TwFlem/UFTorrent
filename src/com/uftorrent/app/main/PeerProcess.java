@@ -31,6 +31,7 @@ public class PeerProcess {
     protected static byte[] bitfield;
     protected static byte[] fullBitfield;
     protected static byte[] emptyBitfiled;
+    protected static FilePiece[] pieces;
     protected static Util util = new Util();
     public static void main(String[] args) {
         clearOldProcessData(); //Deletes log files and peer downloaded files.
@@ -87,6 +88,7 @@ public class PeerProcess {
             bitfield = new byte[sizeOfBitfield];
             emptyBitfiled = new byte[sizeOfBitfield];
             fullBitfield = new byte[sizeOfBitfield];
+            pieces = new FilePiece[commonVars.getNumberOfPieces()];
             System.out.println("Size of bitfield: " + bitfield.length);
 
             if (hasCompleteFile) {
