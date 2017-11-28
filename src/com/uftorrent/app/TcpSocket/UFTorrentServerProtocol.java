@@ -31,9 +31,9 @@ public class UFTorrentServerProtocol extends PeerProcess {
             case 0x5:
                 return handleBitField(recievedPayload);
             case 0x6:
-                break;
+                return handleRequest(strippedPayload);
             case 0x7:
-                return handlePiece(strippedPayload);
+                break;
             default:
                 break;
         }
@@ -55,7 +55,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
     }
     //finds the requestedPiece (a byte value) and returns a message with the piece index as header and piece as payload
     //I am assuming here that the received Payload is only the payload portion of the message (payloadFromInput having been called elsewhere to obtain the payload).
-    private Message handlePiece(byte[] receivedPayload) {
+    private Message handleRequest(byte[] receivedPayload) {
         byte pieceIndex = receivedPayload[0];
         byte[] returnPayload = new byte[(int)commonVars.getPieceSize()];
         return new Message(1 + pieceIndex, (byte)0x7, returnPayload);
