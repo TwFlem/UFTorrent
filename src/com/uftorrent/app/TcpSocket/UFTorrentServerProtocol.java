@@ -13,7 +13,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
     private EventLogger eventLogger = new EventLogger();
     private Util util = new Util();
     public Message handleInput(byte msgType, byte[] recievedPayload) {
-
+        byte[] strippedPayload = payloadFromInput(recievedPayload);
         switch(msgType) {
             case 0x0:
                 break;
@@ -30,7 +30,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
             case 0x6:
                 break;
             case 0x7:
-                return handlePiece(recievedPayload);
+                return handlePiece(strippedPayload);
             default:
                 break;
         }
