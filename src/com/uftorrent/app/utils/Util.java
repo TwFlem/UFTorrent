@@ -4,6 +4,7 @@ package com.uftorrent.app.utils;
 import java.io.File;
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static java.lang.System.exit;
 
@@ -72,5 +73,12 @@ public class Util {
             sum += 1 * Math.pow(2, 8 - k);
         }
         return (byte)sum;
+    }
+    //function to randomly select a piece from a list of pieces that the Server has that this Client does not
+    //maybe I should move this to utils?
+    private int randomSelection(int[] interestedPieces)
+    {
+        int randomSelection = ThreadLocalRandom.current().nextInt(0, interestedPieces.length + 1);
+        return randomSelection;
     }
 }
