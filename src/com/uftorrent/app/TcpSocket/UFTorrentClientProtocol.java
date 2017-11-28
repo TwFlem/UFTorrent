@@ -5,6 +5,7 @@ import com.uftorrent.app.protocols.Message;
 import com.uftorrent.app.utils.Util;
 
 import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class UFTorrentClientProtocol extends PeerProcess {
     private EventLogger eventLogger = new EventLogger();
@@ -43,5 +44,12 @@ public class UFTorrentClientProtocol extends PeerProcess {
         }
         return new Message(bitfield.length + 1, (byte)0x5, bitfield);
     }
+    //function to randomly select a piece from a list of pieces that the Server has that this Client does not
+    private int randomSelection(int[] interestedPieces)
+    {
+        int randomSelection = ThreadLocalRandom.current().nextInt(0, interestedPieces.length + 1);
+        return randomSelection;
+    }
 }
+
 
