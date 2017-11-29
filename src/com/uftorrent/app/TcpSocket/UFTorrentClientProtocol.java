@@ -50,10 +50,12 @@ public class UFTorrentClientProtocol extends PeerProcess {
         return new Message(bitfield.length + 1, (byte)0x5, bitfield);
     }
     private byte[] payloadFromInput(byte[] input) {
-        byte[] payload = new byte[input.length - 1 - 5];
-        for (int i = 5; i < input.length - 1; i++) {
-            payload[i] = input[i];
+        byte[] payload = new byte[input.length - 5];
+        for (int i = 5; i < input.length; i++) {
+            payload[i-5] = input[i];
+            System.out.print(payload[i-5] + " ");
         }
+        System.out.println("Returned Payload length" + payload.length);
         return payload;
     }
 }
