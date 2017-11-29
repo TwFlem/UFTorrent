@@ -5,6 +5,7 @@ import com.uftorrent.app.protocols.Message;
 import com.uftorrent.app.utils.Util;
 
 import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class UFTorrentClientProtocol extends PeerProcess {
     private EventLogger eventLogger = new EventLogger();
@@ -14,6 +15,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
         this.otherPeerId = otherPeerId;
     }
     public Message handleInput(byte msgType, byte[] recievedPayload) {
+        byte[] strippedPayload;
         switch(msgType) {
             case 0x0:
                 break;
@@ -47,5 +49,13 @@ public class UFTorrentClientProtocol extends PeerProcess {
         }
         return new Message(bitfield.length + 1, (byte)0x5, bitfield);
     }
+    private byte[] payloadFromInput(byte[] input) {
+        byte[] payload = new byte[input.length - 1 - 5];
+        for (int i = 5; i < input.length - 1; i++) {
+            payload[i] = input[i];
+        }
+        return payload;
+    }
 }
+
 
