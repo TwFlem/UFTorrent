@@ -3,7 +3,7 @@ package com.uftorrent.app.TcpSocket;
 import com.uftorrent.app.main.PeerProcess;
 import com.uftorrent.app.protocols.Message;
 import com.uftorrent.app.utils.Util;
-
+import com.uftorrent.app.protocols.FilePiece;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -48,6 +48,25 @@ public class UFTorrentClientProtocol extends PeerProcess {
             return new Message(bitfield.length + 1, (byte)0x5, bitfield);
         }
         return new Message(bitfield.length + 1, (byte)0x5, bitfield);
+    }
+
+    private Message handlePiece(byte[] receivedPayload)
+    {
+        //get a piece with the first 4 bytes as the index. Save it in my piece array, update my bitfield, and continue
+        int pieceIndex = util.returnPieceIndex(receivedPayload);
+        FilePiece newPiece = new FilePiece(new byte[commonVars.getNumberOfPieces()], pieceIndex);
+        //write the bytes into a file piece
+        for (int i = 4; i < receivedPayload.length; i++)
+        {
+            newPiece.getFilePiece()[i-4] = receivedPayload[i];
+        }
+        //store the file piece
+        pieces[pieceIndex] = newPiece;
+        //TODO: update the bitfield
+        //respond with a request message for a new piece TODO: Figure out how to determine next piece to request
+        int newRequest = 0;
+        byte[] bytesOfNewIndex = util.intToByteArray(newRequest);
+        return new Message(4 + bytesOfNewIndex.length, (byte)0x6, bytesOfNewIndex);
     }
     private byte[] payloadFromInput(byte[] input) {
         byte[] payload = new byte[input.length - 5];
