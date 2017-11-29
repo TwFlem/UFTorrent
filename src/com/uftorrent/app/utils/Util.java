@@ -4,6 +4,7 @@ package com.uftorrent.app.utils;
 import java.io.File;
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static java.lang.System.exit;
@@ -74,12 +75,7 @@ public class Util {
         pieceIndex = (receivedPayload[0] << 24) | (receivedPayload[1]  << 16) | (receivedPayload[2]  << 8) | (receivedPayload[3]);
         return pieceIndex;
     }
-    //shoves four bytes from a byte array together to form an int
-    public byte[] intToBytes(int receivedInt)
-    {
-        byte[] bytes = ByteBuffer.allocate(4).putInt(receivedInt).array();
-        return bytes;
-    }
+
     public byte intToBigEndianBitChunk(int i) {
         int sum = 0;
         for (int k = 0; k < i + 1; k++) {

@@ -39,6 +39,14 @@ public class PeerProcess {
         clearOldProcessData(); //Deletes log files and peer downloaded files.
         initPeer(args); //Sets package variables regarding this peer.
         //TESTING ---------
+        int z = 3322;
+        byte[] testUtil = util.intToBytes(z);
+        int backToInt = util.packetSize(testUtil);
+        for (int i = 0; i < 4; i++)
+        {
+            System.out.print(testUtil[i] + " ");
+        }
+        System.out.println("BackToInt: " + backToInt);
         byte[] testBitfield = new byte[bitfield.length];
         for (int i = 0; i < bitfield.length; i++)
         {

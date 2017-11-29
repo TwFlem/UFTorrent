@@ -32,7 +32,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
             case 0x6:
                 break;
             case 0x7:
-                break;
+                return handlePiece(recievedPayload);
             default:
                 break;
         }
