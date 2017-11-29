@@ -27,11 +27,12 @@ public class UFTorrentServerProtocol extends PeerProcess {
             case 0x3:
                 break;
             case 0x4:
+                System.out.println("Handleing a have");
                 strippedPayload = payloadFromInput(recievedPayload);
                 return handleHave(strippedPayload);
             case 0x5:
-                strippedPayload = payloadFromInput(recievedPayload);
                 System.out.println("Handleing a bitfield");
+                strippedPayload = payloadFromInput(recievedPayload);
                 return handleBitField(strippedPayload);
             case 0x6:
                 strippedPayload = payloadFromInput(recievedPayload);
@@ -85,7 +86,8 @@ public class UFTorrentServerProtocol extends PeerProcess {
         //now find that piece in my bitfield and see if I already have it. If I do, send not interested message. If i dont, send an interested message.
         int byteIndex = pieceIndex/8;
         int offset = pieceIndex%8;
-        if ((bitfield[byteIndex] >> offset & 1) == 1)
+        int bitChoice = (int)bitfield[byteIndex] >> offset;
+        if ((bitChoice & 1) == 1)
         {
             //I already have the piece, so I ain't interested
             return new Message((byte)0x3);
@@ -100,10 +102,12 @@ public class UFTorrentServerProtocol extends PeerProcess {
 
     // Return the payload of a message
     private byte[] payloadFromInput(byte[] input) {
-        byte[] payload = new byte[input.length - 1 - 5];
-        for (int i = 5; i < payload.length; i++) {
+        byte[] payload = new byte[input.length - 5];
+        for (int i = 5; i < input.length; i++) {
             payload[i-5] = input[i];
+            System.out.print(payload[i-5] + " ");
         }
+        System.out.println("Returned Payload length" + payload.length);
         return payload;
     }
 }

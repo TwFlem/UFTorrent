@@ -44,18 +44,31 @@ public class PeerProcess {
         {
             testBitfield[i] = (byte)0xBC;
         }
-        bitfield[0] = (byte)0xAA;
+        testBitfield[5] = (byte)0x55;
+        testBitfield[6] = (byte)0x44;
+        bitfield[0] = (byte)0x1A;
         bitfield[1] = (byte)0xAA;
         bitfield[2] = (byte)0xAA;
+        bitfield[5] = (byte)0xAA;
         bitfield[6] = (byte)0xAA;
         bitfield[7] = (byte)0xAA;
         bitfield[8] = (byte)0xAA;
+        byte[] testPieceIndex = new byte[4];
+        testPieceIndex[0] = 0;
+        testPieceIndex[1] = 0;
+        testPieceIndex[2] = 0;
+        testPieceIndex[3] = 5;
+        Message haveTest = new Message(5, (byte)0x4, testPieceIndex);
+        byte[] haveTestArray = haveTest.msgToByteArray();
+        Message joe = new UFTorrentServerProtocol(5).handleInput((byte)0x4, haveTestArray);
         Message frank = new UFTorrentServerProtocol(5).handleInput((byte)0x5, testBitfield);
-        for (int i = 0; i < bitfield.length; i++)
-        {
+        for (int i = 0; i < bitfield.length; i++) {
             System.out.print(frank.getData()[i]);
             System.out.print(" ");
         }
+        System.out.println("");
+        System.out.println("Printing joe Message type now");
+        System.out.println(joe.getMessageType());
         //Will make jUnit tests one day
         System.out.println("Here's our env variables!");
         commonVars.print();
