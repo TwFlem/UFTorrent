@@ -11,6 +11,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
     private EventLogger eventLogger = new EventLogger();
     private Util util = new Util();
     public Message handleInput(byte msgType, byte[] recievedPayload) {
+        byte[] strippedPayload = payloadFromInput(recievedPayload);
         switch(msgType) {
             case 0x0:
                 break;
@@ -21,7 +22,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
             case 0x3:
                 break;
             case 0x4:
-                return handleHave(receivedPayload);
+                return handleHave(strippedPayload);
             case 0x5:
                 return handleBitField(recievedPayload);
             case 0x6:
@@ -44,7 +45,8 @@ public class UFTorrentClientProtocol extends PeerProcess {
         }
         return new Message(bitfield.length + 1, (byte)0x5, bitfield);
     }
-    private byte[] handleHave(byte[] receivedPayload)
+    //Mesage
+    private Message handleHave(byte[] receivedPayload)
     {
         byte[] interestedBitfield = new byte[4];
         for (int i = 0; i < receivedPayload.length; i++)
@@ -56,7 +58,14 @@ public class UFTorrentClientProtocol extends PeerProcess {
             int interestedByte = currentClientByte & currentByte;
             interestedBitfield[i] = (byte)interestedByte;
         }
-        return interestedBitfield;
+        return new Message(4+1,(byte)0x2, interestedBitfield);
+    }
+    private byte[] payloadFromInput(byte[] input) {
+        byte[] payload = new byte[input.length - 1 - 5];
+        for (int i = 5; i < input.length - 1; i++) {
+            payload[i] = input[i];
+        }
+        return payload;
     }
 }
 
