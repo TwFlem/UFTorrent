@@ -40,7 +40,7 @@ public class PeerProcess {
         initPeer(args); //Sets package variables regarding this peer.
         //TESTING ---------
         int z = 3322;
-        byte[] testUtil = util.intToBytes(z);
+        byte[] testUtil = util.intToByteArray(z);
         int backToInt = util.packetSize(testUtil);
         for (int i = 0; i < 4; i++)
         {

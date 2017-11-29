@@ -54,9 +54,10 @@ public class UFTorrentServerProtocol extends PeerProcess {
         if (Arrays.equals(completeBitField, recievedBitfield)) {
             peerInfo.setHasCompleteFile(otherPeerId, true);
         }
+        //empty bitfield? Not interested
         if (Arrays.equals(emptyBitfield, recievedBitfield)) {
-            // TODO: tw, How do we handle an empty bitfield?
-            return new Message(bitfield.length + 1, (byte)0x5, bitfield);
+            // TODO: tw, How do we handle an empty bitfield? Right now, just send an uninterested message
+            return new Message((byte)0x3);
         }
         byte[] interestedBitfield = new byte[bitfield.length];
         for (int i = 0; i < recievedBitfield.length; i++)
@@ -68,8 +69,11 @@ public class UFTorrentServerProtocol extends PeerProcess {
             int interestedByte = currentClientByte & currentByte;
             interestedBitfield[i] = (byte)interestedByte;
         }
-        System.out.println("Here's the interested bitfield");
-        System.out.println(interestedBitfield);
+        //no files interested in, send a not interested message
+        if (Arrays.equals(emptyBitfield, interestedBitfield))
+        {
+            return new Message((byte)0x3);
+        }
         return new Message(bitfield.length + 1,(byte)0x2, interestedBitfield);
     }
     //finds the requestedPiece (a byte value) and returns a message with the piece index as header and piece as payload
