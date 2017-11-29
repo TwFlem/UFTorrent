@@ -74,7 +74,8 @@ public class UFTorrentServerProtocol extends PeerProcess {
         {
             return new Message((byte)0x3);
         }
-        return new Message(bitfield.length + 1,(byte)0x2, interestedBitfield);
+        //otherwise, send an interested message to let the other peer know I'm interested in its pieces.
+        return new Message((byte)0x2);
     }
     //finds the requestedPiece (a byte value) and returns a message with the piece index as header and piece as payload
     //I am assuming here that the received Payload is only the payload portion of the message (payloadFromInput having been called elsewhere to obtain the payload).
