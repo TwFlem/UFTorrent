@@ -31,6 +31,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
                 return handleHave(strippedPayload);
             case 0x5:
                 strippedPayload = payloadFromInput(recievedPayload);
+                System.out.println("Handleing a bitfield");
                 return handleBitField(strippedPayload);
             case 0x6:
                 strippedPayload = payloadFromInput(recievedPayload);
@@ -45,6 +46,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
 
     // Message type 5: bitfield
     private Message handleBitField(byte[] recievedBitfield) {
+        System.out.println("Actually handleing a bitfield");
         byte[] emptyBitfield = new byte[bitfield.length];
         byte[] completeBitField = util.getCompleteBitfield(bitfield.length);
         //If the other peer has a completed bitfield, handle it
@@ -55,7 +57,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
             // TODO: tw, How do we handle an empty bitfield?
             return new Message(bitfield.length + 1, (byte)0x5, bitfield);
         }
-        byte[] interestedBitfield = new byte[4];
+        byte[] interestedBitfield = new byte[bitfield.length];
         for (int i = 0; i < recievedBitfield.length; i++)
         {
             //bit operations to find what Server has that this client doesn't
@@ -65,6 +67,8 @@ public class UFTorrentServerProtocol extends PeerProcess {
             int interestedByte = currentClientByte & currentByte;
             interestedBitfield[i] = (byte)interestedByte;
         }
+        System.out.println("Here's the interested bitfield");
+        System.out.println(interestedBitfield);
         return new Message(bitfield.length + 1,(byte)0x2, interestedBitfield);
     }
     //finds the requestedPiece (a byte value) and returns a message with the piece index as header and piece as payload
@@ -97,8 +101,8 @@ public class UFTorrentServerProtocol extends PeerProcess {
     // Return the payload of a message
     private byte[] payloadFromInput(byte[] input) {
         byte[] payload = new byte[input.length - 1 - 5];
-        for (int i = 5; i < input.length - 1; i++) {
-            payload[i] = input[i];
+        for (int i = 5; i < payload.length; i++) {
+            payload[i-5] = input[i];
         }
         return payload;
     }

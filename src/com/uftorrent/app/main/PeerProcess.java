@@ -2,11 +2,13 @@ package com.uftorrent.app.main;
 
 import com.uftorrent.app.TcpSocket.PeerClient;
 import com.uftorrent.app.TcpSocket.PeerServer;
+import com.uftorrent.app.TcpSocket.UFTorrentServerProtocol;
 import com.uftorrent.app.setup.env.CommonVars;
 import com.uftorrent.app.exceptions.InvalidPeerID;
 import com.uftorrent.app.setup.env.PeerInfo;
 import com.uftorrent.app.utils.Util;
 import com.uftorrent.app.protocols.FilePiece;
+import com.uftorrent.app.protocols.Message;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -36,6 +38,24 @@ public class PeerProcess {
     public static void main(String[] args) {
         clearOldProcessData(); //Deletes log files and peer downloaded files.
         initPeer(args); //Sets package variables regarding this peer.
+        //TESTING ---------
+        byte[] testBitfield = new byte[bitfield.length];
+        for (int i = 0; i < bitfield.length; i++)
+        {
+            testBitfield[i] = (byte)0xBC;
+        }
+        bitfield[0] = (byte)0xAA;
+        bitfield[1] = (byte)0xAA;
+        bitfield[2] = (byte)0xAA;
+        bitfield[6] = (byte)0xAA;
+        bitfield[7] = (byte)0xAA;
+        bitfield[8] = (byte)0xAA;
+        Message frank = new UFTorrentServerProtocol(5).handleInput((byte)0x5, testBitfield);
+        for (int i = 0; i < bitfield.length; i++)
+        {
+            System.out.print(frank.getData()[i]);
+            System.out.print(" ");
+        }
         //Will make jUnit tests one day
         System.out.println("Here's our env variables!");
         commonVars.print();

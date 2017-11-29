@@ -18,6 +18,7 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
     private DataInputStream handIn;
     private InputStream bytesIn;
     private OutputStream bytesOut;
+    private byte[] possiblePieces; //The bitfield representing pieces I don't have that the other peer does
     private EventLogger eventLogger = new EventLogger();
     public ClientConnectionHandler(String hostName, int port) {
         try {
