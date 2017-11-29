@@ -76,6 +76,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
     //I am assuming here that the received Payload is only the payload portion of the message (payloadFromInput having been called elsewhere to obtain the payload).
     private Message handleRequest(byte[] receivedPayload) {
         byte pieceIndex = receivedPayload[0];
+        // TODO: Get the actual file piece from wherever its being stored
         byte[] returnPayload = new byte[(int)commonVars.getPieceSize()];
         return new Message(1 + pieceIndex, (byte)0x7, returnPayload);
     }
