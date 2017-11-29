@@ -13,6 +13,7 @@ import static java.lang.System.exit;
 
 public class ClientConnectionHandler extends PeerProcess implements Runnable {
     private int otherPeerId;
+    public boolean isInterested;
     private Socket socketToPeer;
     private PrintStream handOut;
     private DataInputStream handIn;
@@ -23,6 +24,7 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
     public ClientConnectionHandler(String hostName, int port) {
         try {
             this.socketToPeer = new Socket(hostName, port);
+            this.isInterested = false;
             handOut = new PrintStream(socketToPeer.getOutputStream(), true);
             handIn = new DataInputStream(socketToPeer.getInputStream());
             bytesIn = socketToPeer.getInputStream();

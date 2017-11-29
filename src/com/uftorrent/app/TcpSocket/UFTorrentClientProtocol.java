@@ -119,7 +119,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
     //should be mostly correct
     private Message handleRequest(byte[] receivedPayload) {
         int pieceIndex = util.returnPieceIndex(receivedPayload);
-        // TODO: Just make sure this is how were storing pieces
+        // TODO: Just make sure this is how were storing pieces, apart from that, this one should be good to go
         FilePiece returnPiece = pieces[pieceIndex];
         byte[] returnPayload = returnPiece.getFilePiece();
         return new Message(1 + pieceIndex, (byte)0x7, returnPayload);
