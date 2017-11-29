@@ -25,7 +25,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
             case 0x3:
                 break;
             case 0x4:
-                break;
+                return handleHave(receivedPayload);
             case 0x5:
                 return handleBitField(recievedPayload);
             case 0x6:
@@ -47,6 +47,20 @@ public class UFTorrentClientProtocol extends PeerProcess {
             return new Message(bitfield.length + 1, (byte)0x5, bitfield);
         }
         return new Message(bitfield.length + 1, (byte)0x5, bitfield);
+    }
+    private byte[] handleHave(byte[] receivedPayload)
+    {
+        byte[] interestedBitfield = new byte[4];
+        for (int i = 0; i < receivedPayload.length; i++)
+        {
+            //bit operations to find what Server has that this client doesn't
+            int currentByte = (int)receivedPayload[i];
+            int currentClientByte = (int)bitfield[i];
+            currentClientByte = ~currentClientByte;
+            int interestedByte = currentClientByte & currentByte;
+            interestedBitfield[i] = (byte)interestedByte;
+        }
+        return interestedBitfield;
     }
 }
 
