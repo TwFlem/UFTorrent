@@ -76,8 +76,8 @@ public class UFTorrentServerProtocol extends PeerProcess {
     {
         int pieceIndex = (receivedPayload[0] << 24) | (receivedPayload[1]  << 16) | (receivedPayload[2]  << 8) | (receivedPayload[3]);
         //now find that piece in my bitfield and see if I already have it. If I do, send not interested message. If i dont, send an interested message.
-        int byteIndex = pieceIndex/4;
-        int offset = pieceIndex%4;
+        int byteIndex = pieceIndex/8;
+        int offset = pieceIndex%8;
         if ((bitfield[byteIndex] >> offset & 1) == 1)
         {
             //I already have the piece, so I ain't interested
