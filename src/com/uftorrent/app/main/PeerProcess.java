@@ -57,7 +57,7 @@ public class PeerProcess {
         testPieceIndex[0] = 0;
         testPieceIndex[1] = 0;
         testPieceIndex[2] = 0;
-        testPieceIndex[3] = 5;
+        testPieceIndex[3] = 4;
         Message haveTest = new Message(5, (byte)0x4, testPieceIndex);
         byte[] haveTestArray = haveTest.msgToByteArray();
         Message joe = new UFTorrentServerProtocol(5).handleInput((byte)0x4, haveTestArray);
