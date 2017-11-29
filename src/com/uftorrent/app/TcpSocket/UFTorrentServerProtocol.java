@@ -25,7 +25,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
             case 0x2:
                 return handleInterested();
             case 0x3:
-                break;
+                return handleUninterested();
             case 0x4:
                 System.out.println("Handleing a have");
                 strippedPayload = payloadFromInput(recievedPayload);
@@ -38,7 +38,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
                 strippedPayload = payloadFromInput(recievedPayload);
                 return handleRequest(strippedPayload);
             case 0x7:
-                break;
+                return handlePiece(recievedPayload);
             default:
                 break;
         }
