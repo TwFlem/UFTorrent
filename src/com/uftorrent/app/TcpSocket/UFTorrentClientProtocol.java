@@ -15,7 +15,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
         this.otherPeerId = otherPeerId;
     }
     public Message handleInput(byte msgType, byte[] recievedPayload) {
-        byte[] strippedPayload = payloadFromInput(recievedPayload);
+        byte[] strippedPayload;
         switch(msgType) {
             case 0x0:
                 break;
@@ -26,6 +26,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
             case 0x3:
                 break;
             case 0x4:
+                strippedPayload = payloadFromInput(recievedPayload);
                 return handleHave(strippedPayload);
             case 0x5:
                 return handleBitField(recievedPayload);
