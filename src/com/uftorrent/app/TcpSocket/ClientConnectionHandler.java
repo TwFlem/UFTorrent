@@ -13,15 +13,18 @@ import static java.lang.System.exit;
 
 public class ClientConnectionHandler extends PeerProcess implements Runnable {
     private int otherPeerId;
+    public boolean isInterested;
     private Socket socketToPeer;
     private PrintStream handOut;
     private DataInputStream handIn;
     private InputStream bytesIn;
     private OutputStream bytesOut;
+    private byte[] possiblePieces; //The bitfield representing pieces I don't have that the other peer does
     private EventLogger eventLogger = new EventLogger();
     public ClientConnectionHandler(String hostName, int port) {
         try {
             this.socketToPeer = new Socket(hostName, port);
+            this.isInterested = false;
             handOut = new PrintStream(socketToPeer.getOutputStream(), true);
             handIn = new DataInputStream(socketToPeer.getInputStream());
             bytesIn = socketToPeer.getInputStream();
