@@ -52,7 +52,17 @@ public class UFTorrentServerProtocol extends PeerProcess {
             // TODO: tw, How do we handle an empty bitfield?
             return new Message(bitfield.length + 1, (byte)0x5, bitfield);
         }
-        return new Message(bitfield.length + 1, (byte)0x5, bitfield);
+        byte[] interestedBitfield = new byte[4];
+        for (int i = 0; i < recievedBitfield.length; i++)
+        {
+            //bit operations to find what Server has that this client doesn't
+            int currentByte = (int)recievedBitfield[i];
+            int currentClientByte = (int)bitfield[i];
+            currentClientByte = ~currentClientByte;
+            int interestedByte = currentClientByte & currentByte;
+            interestedBitfield[i] = (byte)interestedByte;
+        }
+        return new Message(bitfield.length + 1,(byte)0x2, interestedBitfield);
     }
     //finds the requestedPiece (a byte value) and returns a message with the piece index as header and piece as payload
     //I am assuming here that the received Payload is only the payload portion of the message (payloadFromInput having been called elsewhere to obtain the payload).
