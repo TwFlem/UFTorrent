@@ -10,78 +10,30 @@ import java.net.Socket;
 
 import static java.lang.System.exit;
 
-public class PeerServer extends PeerProcess implements Runnable{
-    private PrintWriter handOut;
-    private BufferedReader handIn;
-    private InputStream bytesIn;
-    private OutputStream bytesOut;
-    EventLogger eventLogger = new EventLogger();
+public class PeerServer extends PeerProcess implements Runnable {
+    private Thread[] clientConnections;
     public void run() {
         System.out.println("Hello from a server thread!");
+        this.clientConnections = new Thread[peerInfo.getSize()];
         try {
-            String otherPeerId;
             ServerSocket serverSocket = new ServerSocket(portNumber);
-            Socket clientConnection = serverSocket.accept();
-
-            handOut = new PrintWriter(clientConnection.getOutputStream(), true);
-            handIn = new BufferedReader(new InputStreamReader(clientConnection.getInputStream()));
-
-            otherPeerId = waitForHandshakes();
-            handOut.println(handshakeMessage);
-
-            bytesIn = clientConnection.getInputStream();
-            bytesOut = clientConnection.getOutputStream();
-            UFTorrentServerProtocol protocol = new UFTorrentServerProtocol();
-
-            while (true) {
-                byte[] sizeHeaderFromClient = new byte[4];
-                byte[] msgType = new byte[1];
-                int bytesRead;
-
-                bytesIn.read(sizeHeaderFromClient, 0, 4);
-                int messageSize = util.packetSize(sizeHeaderFromClient);
-                System.out.println("Size of message From Client: " + messageSize);
-
-                bytesIn.read(msgType, 0, 1);
-                System.out.println("Message type of client: " + msgType[0]);
-
-                byte[] msgBody = new byte[messageSize - 1];
-                bytesRead = bytesIn.read(msgBody, 0, msgBody.length);
-                System.out.println("# of payload bytes read from client: " + bytesRead);
-
-                bytesOut.write(protocol.handleInput(msgType[0], msgBody).msgToByteArray());
-
-                if (sizeHeaderFromClient[0] == 'z') {
-                    break;
-                }
+            for(int i = 0; i < this.clientConnections.length; i++) {
+                Socket clientConnection = serverSocket.accept();
+                ServerConnectionHandler newConnection = new ServerConnectionHandler(clientConnection);
+                Thread newConnectionThread = new Thread(newConnection);
+                this.clientConnections[i] = newConnectionThread;
             }
 
-            // Server cleanup procedure
-            clientConnection.close();
-            serverSocket.close();
-        }
-        catch(Exception e) {
+            for (int i = 0; i < this.clientConnections.length; i++) {
+                this.clientConnections[i].start();
+            }
+
+            for (int i = 0; i < this.clientConnections.length; i++) {
+                this.clientConnections[i].join();
+            }
+
+        } catch(Exception e) {
             System.out.print("Whoops! The Server quit unexpectedly!\n" + e + "\n");
         }
-    }
-
-    // Wait for Clients to send handshake
-    private String waitForHandshakes() {
-        try {
-            String fromClient;
-            while ((fromClient = handIn.readLine()) != null) {
-                System.out.println("Handshake Received From Client: " + fromClient);
-                if (fromClient.substring(0, 18).equals("P2PFILESHARINGPROJ")) {
-                    String otherPeerId = fromClient.substring(fromClient.length() - 4);
-                    eventLogger.logTCPConnectionFrom(otherPeerId);
-                    return otherPeerId;
-                }
-            }
-        }
-        catch(Exception e) {
-            System.out.print("Whoops! Server unexpectedly quit!\n" + e.getMessage());
-            exit(1);
-        }
-        return "Bye.";
     }
 }

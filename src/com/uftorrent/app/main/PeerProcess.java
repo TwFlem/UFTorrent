@@ -22,7 +22,7 @@ public class PeerProcess {
     protected static final String workingDir = System.getProperty("user.dir");
     protected static final CommonVars commonVars = new CommonVars();
     protected static final PeerInfo peerInfo = new PeerInfo();
-    protected static String peerId;
+    protected static int peerId;
     protected static String hostName;
     protected static int portNumber;
     protected static boolean hasCompleteFile;
@@ -72,9 +72,13 @@ public class PeerProcess {
     private static void initPeer(String[] args) {
         try {
             //Initialize this peer Process' info.
-            peerId = args[0];
+            try {
+                peerId = Integer.parseInt(args[0]);
+            } catch (Exception e) {
+                System.out.println("Peer id must be a 4 digit integer");
+            }
 
-            if (peerId.length() != 4) {
+            if (peerId < 1000) {
                 throw new InvalidPeerID("peer ID must have 4 digits.");
             }
 

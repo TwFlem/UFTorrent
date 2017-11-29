@@ -8,7 +8,11 @@ import java.util.Arrays;
 
 public class UFTorrentClientProtocol extends PeerProcess {
     private EventLogger eventLogger = new EventLogger();
+    private int otherPeerId;
     private Util util = new Util();
+    public UFTorrentClientProtocol(int otherPeerId) {
+        this.otherPeerId = otherPeerId;
+    }
     public Message handleInput(byte msgType, byte[] recievedPayload) {
         switch(msgType) {
             case 0x0:

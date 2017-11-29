@@ -8,9 +8,12 @@ import java.util.Arrays;
 
 public class UFTorrentServerProtocol extends PeerProcess {
     private String handlingType;
-    private String otherPeerId;
+    private int otherPeerId;
     private EventLogger eventLogger = new EventLogger();
     private Util util = new Util();
+    public UFTorrentServerProtocol(int otherPeerId) {
+        this.otherPeerId = otherPeerId;
+    }
     public Message handleInput(byte msgType, byte[] recievedPayload) {
 
         switch(msgType) {

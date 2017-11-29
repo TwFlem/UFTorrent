@@ -6,9 +6,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.io.FileReader;
 import java.io.BufferedReader;
+import java.util.Set;
 
 public class PeerInfo {
-    private Map<String, String[]> peerInfo = new HashMap<>();
+    private Map<Integer, String[]> peerInfo = new HashMap<>();
     public PeerInfo() {
         String fileName = "PeerInfo.cfg";
         loadPeerInfo(fileName);
@@ -23,7 +24,7 @@ public class PeerInfo {
             while((line = bufferedReader.readLine()) != null) {
                 // The first element of this array is the peer's ID
                 String[] parsedPeerInfo = line.split(" ");
-                String currentPeerId = parsedPeerInfo[0];
+                int currentPeerId = Integer.parseInt(parsedPeerInfo[0]);
                 String[] currentPeerValues = Arrays.copyOfRange(parsedPeerInfo, 1, parsedPeerInfo.length);
                 this.peerInfo.put(currentPeerId, currentPeerValues);
             }
@@ -38,21 +39,21 @@ public class PeerInfo {
     }
 
     public void print() {
-        for (String peerID : this.peerInfo.keySet()) {
+        for (Integer peerID : this.peerInfo.keySet()) {
             System.out.format("ID: %s: HostName: %s PortNumber: %s HasCompleteFile: %s%n",
                     peerID, this.peerInfo.get(peerID)[0], this.peerInfo.get(peerID)[1], this.peerInfo.get(peerID)[2]);
         }
     }
-    public String getHostName(String id) {
+    public String getHostName(int id) {
         return this.peerInfo.get(id)[0];
     }
-    public int getPortNumber(String id) {
+    public int getPortNumber(int id) {
         return Integer.parseInt(this.peerInfo.get(id)[1]);
     }
-    public boolean getHasCompleteFile(String id) {
+    public boolean getHasCompleteFile(int id) {
         return this.peerInfo.get(id)[2].equals("1");
     }
-    public void setHasCompleteFile(String peerId, boolean hasCompleteFile) {
+    public void setHasCompleteFile(int peerId, boolean hasCompleteFile) {
         String[] currentPeerValues = this.peerInfo.get(peerId);
         if (hasCompleteFile) {
             currentPeerValues[2] = "1";
@@ -61,5 +62,11 @@ public class PeerInfo {
         }
         currentPeerValues[2] = "0";
         this.peerInfo.put(peerId, currentPeerValues);
+    }
+    public int getSize() {
+        return this.peerInfo.size();
+    }
+    public Set<Integer> getPeerIds() {
+        return this.peerInfo.keySet();
     }
 }
