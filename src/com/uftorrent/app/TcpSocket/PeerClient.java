@@ -2,38 +2,41 @@ package com.uftorrent.app.TcpSocket;
 
 import com.uftorrent.app.main.PeerProcess;
 
+import java.util.concurrent.TimeUnit;
+
 public class PeerClient extends PeerProcess implements Runnable {
 
     private EventLogger eventLogger = new EventLogger();
-    private Thread[] serverConnections;
     public void run() {
         try {
             System.out.println("Hello from a client thread!");
-            this.serverConnections = new Thread[peerInfo.getSize()];
-
-            int peerIndex = 0;
-            for (int peerID : peerInfo.getPeerIds()) {
-                System.out.println("hello " + peerID);
+            for (int newPeerId : peerInfo.getPeerIds()) {
                 ClientConnectionHandler newConnection = new ClientConnectionHandler(
-                        peerInfo.getHostName(peerID),
-                        peerInfo.getPortNumber(peerID)
+                        peerInfo.getHostName(newPeerId),
+                        peerInfo.getPortNumber(newPeerId)
                 );
-                Thread newConnectionThread = new Thread(newConnection);
-                this.serverConnections[peerIndex] = newConnectionThread;
-                peerIndex = peerIndex + 1;
+                newConnection.connectionThread = new Thread(newConnection);
+                newConnection.connectionThread.run();
             }
-
-            for (int i = 0; i < this.serverConnections.length; i++) {
-                this.serverConnections[i].start();
-            }
-
-            for (int i = 0; i < this.serverConnections.length; i++) {
-                this.serverConnections[i].join();
-            }
-
         }
         catch(Exception e) {
             System.out.print("Whoops! Client unexpectedly quit!\n" + e + "\n");
+        }
+
+        while(clientConnectionHandlers.keySet().size() == 0) {
+            try {
+                TimeUnit.SECONDS.sleep(1);
+            } catch (Exception e) {
+                    System.out.println("Waiting for at least one handshake" + "\n" + e + "\n");
+                }
+        }
+
+        for (Integer otherPeerId : clientConnectionHandlers.keySet()) {
+            try {
+                clientConnectionHandlers.get(otherPeerId).connectionThread.join();
+            } catch (Exception e) {
+                System.out.println("Client execution failed\n" + e + "\n");
+            }
         }
     }
 }

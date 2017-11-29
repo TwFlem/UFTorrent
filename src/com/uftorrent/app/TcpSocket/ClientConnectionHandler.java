@@ -18,6 +18,9 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
     private DataInputStream handIn;
     private InputStream bytesIn;
     private OutputStream bytesOut;
+    public boolean isInterestedInOtherPeer;
+    public boolean isChoked;
+    public Thread connectionThread;
     private EventLogger eventLogger = new EventLogger();
     public ClientConnectionHandler(String hostName, int port) {
         try {
@@ -35,6 +38,8 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
 
             handOut.println(handshakeMessage);
             this.otherPeerId = waitForHandshake();
+
+            clientConnectionHandlers.put(otherPeerId, this);
             System.out.println("ClientConnectionHandler for " + this.otherPeerId);
 
             Message initialBitfieldMessage = new Message(bitfield.length + 1, (byte)5, bitfield);
