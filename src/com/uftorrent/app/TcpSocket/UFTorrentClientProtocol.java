@@ -129,7 +129,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
     {
         //get a piece with the first 4 bytes as the index. Save it in my piece array, update my bitfield, and continue
         int pieceIndex = util.returnPieceIndex(receivedPayload);
-        FilePiece newPiece = new FilePiece(new byte[commonVars.getNumberOfPieces()], pieceIndex);
+        FilePiece newPiece = new FilePiece(new byte[(int)commonVars.getPieceSize()], pieceIndex);
         //write the bytes into a file piece
         for (int i = 4; i < receivedPayload.length; i++)
         {
@@ -137,7 +137,10 @@ public class UFTorrentClientProtocol extends PeerProcess {
         }
         //store the file piece
         pieces[pieceIndex] = newPiece;
-        //TODO: update the bitfield
+        //update the bitfield
+        int byteIndex = pieceIndex/8;
+        int offset = pieceIndex%8;
+        bitfield[byteIndex] = (byte)(bitfield[byteIndex] | (1 << 7-offset)); //TODO: Test this and make sure it sets properly
         //respond with a request message for a new piece TODO: Figure out how to determine next piece to request (need list of interested pieces to be stored somewhere
         int newRequest = 0;
         byte[] bytesOfNewIndex = util.intToByteArray(newRequest);
