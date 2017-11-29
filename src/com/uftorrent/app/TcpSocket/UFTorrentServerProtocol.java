@@ -27,9 +27,11 @@ public class UFTorrentServerProtocol extends PeerProcess {
             case 0x3:
                 break;
             case 0x4:
-                break;
+                strippedPayload = payloadFromInput(recievedPayload);
+                return handleHave(strippedPayload);
             case 0x5:
-                return handleBitField(recievedPayload);
+                strippedPayload = payloadFromInput(recievedPayload);
+                return handleBitField(strippedPayload);
             case 0x6:
                 strippedPayload = payloadFromInput(recievedPayload);
                 return handleRequest(strippedPayload);
@@ -45,6 +47,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
     private Message handleBitField(byte[] recievedBitfield) {
         byte[] emptyBitfield = new byte[bitfield.length];
         byte[] completeBitField = util.getCompleteBitfield(bitfield.length);
+        //If the other peer has a completed bitfield, handle it
         if (Arrays.equals(completeBitField, recievedBitfield)) {
             peerInfo.setHasCompleteFile(otherPeerId, true);
         }
@@ -70,6 +73,24 @@ public class UFTorrentServerProtocol extends PeerProcess {
         byte pieceIndex = receivedPayload[0];
         byte[] returnPayload = new byte[(int)commonVars.getPieceSize()];
         return new Message(1 + pieceIndex, (byte)0x7, returnPayload);
+    }
+    //handle a have message
+    private Message handleHave(byte[] receivedPayload)
+    {
+        int pieceIndex = (receivedPayload[0] << 24) | (receivedPayload[1]  << 16) | (receivedPayload[2]  << 8) | (receivedPayload[3]);
+        //now find that piece in my bitfield and see if I already have it. If I do, send not interested message. If i dont, send an interested message.
+        int byteIndex = pieceIndex/4;
+        int offset = pieceIndex%4;
+        if ((bitfield[byteIndex] >> offset & 1) == 1)
+        {
+            //I already have the piece, so I ain't interested
+            return new Message((byte)0x3);
+        }
+        else
+        {
+            //I don't have the piece, so send an interested message
+            return new Message((byte)0x2);
+        }
     }
 
 
