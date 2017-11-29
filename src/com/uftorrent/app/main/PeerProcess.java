@@ -1,8 +1,9 @@
 package com.uftorrent.app.main;
 
+import com.uftorrent.app.TcpSocket.ClientConnectionHandler;
 import com.uftorrent.app.TcpSocket.PeerClient;
 import com.uftorrent.app.TcpSocket.PeerServer;
-import com.uftorrent.app.TcpSocket.UFTorrentServerProtocol;
+import com.uftorrent.app.TcpSocket.ServerConnectionHandler;
 import com.uftorrent.app.setup.env.CommonVars;
 import com.uftorrent.app.exceptions.InvalidPeerID;
 import com.uftorrent.app.setup.env.PeerInfo;
@@ -15,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.Path;
 import java.lang.*;
+import java.util.HashMap;
 import java.util.regex.Pattern;
 import java.util.Arrays;
 
@@ -33,6 +35,8 @@ public class PeerProcess {
     protected static byte[] bitfield;
     protected static byte[] fullBitfield;
     protected static byte[] emptyBitfiled;
+    protected HashMap<Integer, ClientConnectionHandler> clientConnectionHandlers = new HashMap<>();
+    protected HashMap<Integer, ServerConnectionHandler> serverConnectionHandlers = new HashMap<>();
     protected static FilePiece[] pieces; //keep track of what File pieces I have
     protected static Util util = new Util();
     public static void main(String[] args) {

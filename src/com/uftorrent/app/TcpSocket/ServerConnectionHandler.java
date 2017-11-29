@@ -15,6 +15,10 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
     private BufferedReader handIn;
     private InputStream bytesIn;
     private OutputStream bytesOut;
+    public boolean isChokingTheOtherPeer;
+    public boolean isNotInteresting;
+    private byte[] otherPeersBitfield;
+    public Thread connectionThread;
     private EventLogger eventLogger = new EventLogger();
 
     public ServerConnectionHandler(Socket clientConnection) {
@@ -32,6 +36,8 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
     public void run() {
         try {
             otherPeerId = waitForHandshake();
+
+            serverConnectionHandlers.put(otherPeerId, this);
 
             this.handOut.println(handshakeMessage);
 
