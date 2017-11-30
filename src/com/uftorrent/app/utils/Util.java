@@ -1,6 +1,8 @@
 package com.uftorrent.app.utils;
 
 
+import com.uftorrent.app.protocols.Message;
+
 import java.io.File;
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
@@ -89,5 +91,20 @@ public class Util {
     {
         int randomSelection = ThreadLocalRandom.current().nextInt(0, interestedPieces.length);
         return randomSelection;
+    }
+    public boolean isBitOne(int index, byte[] bitfield)
+    {
+        int byteIndex = index/8;
+        int offset = index%8;
+        int bitChoice = (int)bitfield[byteIndex] >> 7-offset;
+        //if the bit is a one, return true
+        if ((bitChoice & 1) == 1)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }
