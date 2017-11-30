@@ -123,4 +123,12 @@ public class Util {
         }
         return count;
     }
+    //TODO: test this
+    public byte[] setBit(int index, byte[] bitfield)
+    {
+        int byteIndex = index/8;
+        int offset = index%8;
+        bitfield[byteIndex] = (byte)(bitfield[byteIndex] | (1 << 7-offset));
+        return bitfield;
+    }
 }

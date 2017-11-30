@@ -79,7 +79,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
     {
         int pieceIndex = (receivedPayload[0] << 24) | (receivedPayload[1]  << 16) | (receivedPayload[2]  << 8) | (receivedPayload[3]);
         eventLogger.receivedHaveMsg(Integer.toString(otherPeerId), Integer.toString(pieceIndex));
-        //TODO: Update other peers bitfield with this info
+        //TODO: Update other peers bitfield with this info (write util to set a bit)
         //now find that piece in my bitfield and see if I already have it. If I do, send not interested message. If i dont, send an interested message.
         boolean isOne = util.isBitOne(pieceIndex, bitfield);
         if (isOne)
