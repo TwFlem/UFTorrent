@@ -141,7 +141,8 @@ public class UFTorrentClientProtocol extends PeerProcess {
     }
     //message type 7: piece
     //TODO: Test this.
-    //TODO: Make a branch to send not interested message if theres no new pieces to take
+    //TODO: Blast out have messages after downloading a piece
+    //TODO: Check against all bitfields after receiving piece, to determine if should now send not interested message
     private Message handlePiece(byte[] receivedPayload)
     {
         //get a piece with the first 4 bytes as the index. Save it in my piece array, update my bitfield, and continue
