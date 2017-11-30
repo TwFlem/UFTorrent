@@ -107,6 +107,7 @@ public class Util {
             return false;
         }
     }
+    //TODO: test this
     public int numberOfOnes(byte[] pieces)
     {
         int count = 0;
