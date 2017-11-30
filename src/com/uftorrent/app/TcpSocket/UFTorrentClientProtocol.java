@@ -75,6 +75,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
     }
     //message type 4: Have
     //handle a have message, this should be complete
+    //TODO: Test this.
     private Message handleHave(byte[] receivedPayload)
     {
         int pieceIndex = (receivedPayload[0] << 24) | (receivedPayload[1]  << 16) | (receivedPayload[2]  << 8) | (receivedPayload[3]);
@@ -131,6 +132,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
     }
     //message type 6: request
     //should be mostly correct
+    //TODO: Test this.
     private Message handleRequest(byte[] receivedPayload) {
         int pieceIndex = util.returnPieceIndex(receivedPayload);
         FilePiece returnPiece = pieces[pieceIndex];
@@ -138,6 +140,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
         return new Message(1 + pieceIndex, (byte)0x7, returnPayload);
     }
     //message type 7: piece
+    //TODO: Test this.
     private Message handlePiece(byte[] receivedPayload)
     {
         //get a piece with the first 4 bytes as the index. Save it in my piece array, update my bitfield, and continue

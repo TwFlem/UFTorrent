@@ -27,16 +27,11 @@ public class UFTorrentServerProtocol extends PeerProcess {
             case 0x3:
                 return handleUninterested();
             case 0x4:
-                System.out.println("Handleing a have");
-                strippedPayload = payloadFromInput(recievedPayload);
-                return handleHave(strippedPayload);
+                return handleHave(recievedPayload);
             case 0x5:
-                System.out.println("Handleing a bitfield");
-                strippedPayload = payloadFromInput(recievedPayload);
-                return handleBitField(strippedPayload);
+                return handleBitField(recievedPayload);
             case 0x6:
-                strippedPayload = payloadFromInput(recievedPayload);
-                return handleRequest(strippedPayload);
+                return handleRequest(recievedPayload);
             case 0x7:
                 return handlePiece(recievedPayload);
             default:
