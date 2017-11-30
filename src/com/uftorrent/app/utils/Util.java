@@ -107,4 +107,19 @@ public class Util {
             return false;
         }
     }
+    public int numberOfOnes(byte[] pieces)
+    {
+        int count = 0;
+        for (int i = 0; i < pieces.length * 8; i++)
+        {
+            int byteIndex = i/8;
+            int offset = i%8;
+            int bitChoice = (int)pieces[byteIndex] >> 7-offset;
+            if ((bitChoice & 1) == 1)
+            {
+                count = count + 1;
+            }
+        }
+        return count;
+    }
 }
