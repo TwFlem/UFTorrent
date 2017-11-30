@@ -141,11 +141,13 @@ public class UFTorrentClientProtocol extends PeerProcess {
     }
     //message type 7: piece
     //TODO: Test this.
+    //TODO: Make a branch to send not interested message if theres no new pieces to take
     private Message handlePiece(byte[] receivedPayload)
     {
         //get a piece with the first 4 bytes as the index. Save it in my piece array, update my bitfield, and continue
         int pieceIndex = util.returnPieceIndex(receivedPayload);
         byte[] completeBitField = util.getCompleteBitfield(bitfield.length);
+        byte[] emptyBitfield = new byte[bitfield.length];
         FilePiece newPiece = new FilePiece(new byte[(int)commonVars.getPieceSize()], pieceIndex);
         //write the bytes into a file piece
         for (int i = 4; i < receivedPayload.length; i++)
@@ -172,6 +174,10 @@ public class UFTorrentClientProtocol extends PeerProcess {
         // randomally select a new piece to request
         int newRequest = 0;
         byte[] possiblePieces = clientConnectionHandlers.get(otherPeerId).possiblePieces;
+        //check to see if there are no possible pieces, if so, send a not interested message
+        if (Arrays.equals(emptyBitfield, possiblePieces)) {
+            return new Message((byte)0x3);
+        }
         newRequest = util.randomSelection(possiblePieces);
         byte[] bytesOfNewIndex = util.intToByteArray(newRequest);
         return new Message(4 + bytesOfNewIndex.length, (byte)0x6, bytesOfNewIndex);
