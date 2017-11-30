@@ -2,66 +2,58 @@ package com.uftorrent.app.TcpSocket;
 
 
 import com.uftorrent.app.main.PeerProcess;
+import com.uftorrent.app.protocols.Message;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
-import static java.lang.System.exit;
 
-public class PeerServer extends PeerProcess implements Runnable{
-    private PrintWriter out;
-    private BufferedReader in;
-    EventLogger eventLogger = new EventLogger();
+public class PeerServer extends PeerProcess implements Runnable {
     public void run() {
         System.out.println("Hello from a server thread!");
         try {
-            String inputLine, otherPeerId;
-            ServerSocket serverSocket = new ServerSocket(portNumber);
-            Socket clientConnection = serverSocket.accept();
-
-            out = new PrintWriter(clientConnection.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(clientConnection.getInputStream()));
-
-            otherPeerId = waitForHandshakes();
-            out.println(handshakeMessage);
-            UFTorrentProtocol protocol = new UFTorrentProtocol("server", otherPeerId);
-
-            while ((inputLine = in.readLine()) != null) {
-                System.out.println("From Client: " + inputLine);
-                if (inputLine.equals("Cya.")) {
-                    break;
+                ServerSocket serverSocket = new ServerSocket(portNumber);
+                for (Integer otherPeerId : peerInfo.getPeerIds()) {
+                    if (otherPeerId == peerId) {
+                        continue;
+                    }
+                    Socket clientConnection = serverSocket.accept();
+                    ServerConnectionHandler newConnection = new ServerConnectionHandler(clientConnection);
+                    Thread newConnectionThread = new Thread(newConnection);
+                    newConnection.connectionThread = newConnectionThread;
+                    newConnectionThread.run();
                 }
-//                out.println(protocol.handleInput(inputLine));
+            } catch(Exception e) {
+                System.out.print("Whoops! The Server quit unexpectedly!\n" + e + "\n");
             }
 
-            // Server cleanup procedure
-            out.close();
-            clientConnection.close();
-            serverSocket.close();
-        }
-        catch(Exception e) {
-            System.out.print("Whoops! The Server quit unexpectedly!\n");
-        }
-    }
+        System.out.print("Main Server thread has created all connectionHandlers");
+        while(serverConnectionHandlers.keySet().size() < peerInfo.getPeerIds().size() - 1) {
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                    System.out.println("Waiting for all handshakes server" + serverConnectionHandlers.keySet().size()
+                     + "/" + (peerInfo.getPeerIds().size() - 1));
+                } catch (Exception e) {
+                    System.out.println("Waiting for all handshakes server" + "\n" + e + "\n");
+                    }
+            }
+        System.out.print("Main Sever thread has shook all hands");
 
-    // Wait for Clients to send handshake
-    private String waitForHandshakes() {
-        try {
-            String fromClient;
-            while ((fromClient = in.readLine()) != null) {
-                System.out.println("Handshake From Client: " + fromClient);
-                if (fromClient.substring(0, 18).equals("P2PFILESHARINGPROJ")) {
-                    String otherPeerId = fromClient.substring(fromClient.length() - 4);
-                    eventLogger.logTCPConnectionFrom(otherPeerId);
-                    return otherPeerId;
+        for (Integer otherPeerId : serverConnectionHandlers.keySet()) {
+                System.out.println("waiting for servers to finish");
+                try {
+                    System.out.println("Server for " + otherPeerId + " is waiting to finish.");
+                    if (otherPeerId != peerId) {
+                        serverConnectionHandlers.get(otherPeerId).connectionThread.join();
+                        System.out.println("Server for " + otherPeerId + " has closed.");
+                    }
+                } catch (Exception e) {
+                    System.out.println("Server execution failed\n" + e + "\n");
                 }
             }
-        }
-        catch(Exception e) {
-            System.out.print("Whoops! Server unexpectedly quit!\n");
-            exit(1);
-        }
-        return "Bye.";
+
     }
 }

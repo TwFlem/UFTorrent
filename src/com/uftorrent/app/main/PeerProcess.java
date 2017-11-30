@@ -1,18 +1,22 @@
 package com.uftorrent.app.main;
 
+import com.uftorrent.app.TcpSocket.ClientConnectionHandler;
 import com.uftorrent.app.TcpSocket.PeerClient;
 import com.uftorrent.app.TcpSocket.PeerServer;
+import com.uftorrent.app.TcpSocket.ServerConnectionHandler;
 import com.uftorrent.app.setup.env.CommonVars;
 import com.uftorrent.app.exceptions.InvalidPeerID;
 import com.uftorrent.app.setup.env.PeerInfo;
 import com.uftorrent.app.utils.Util;
 import com.uftorrent.app.protocols.FilePiece;
+import com.uftorrent.app.protocols.Message;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.Path;
 import java.lang.*;
+import java.util.HashMap;
 import java.util.regex.Pattern;
 import java.util.Arrays;
 
@@ -22,13 +26,18 @@ public class PeerProcess {
     protected static final String workingDir = System.getProperty("user.dir");
     protected static final CommonVars commonVars = new CommonVars();
     protected static final PeerInfo peerInfo = new PeerInfo();
-    protected static String peerId;
+    protected static int peerId;
     protected static String hostName;
     protected static int portNumber;
     protected static boolean hasCompleteFile;
     protected static String handshakeMessage = "P2PFILESHARINGPROJ0000000000";
     protected static String downloadFilePath;
-    protected static byte[] bitfield = {0, 0};
+    protected static byte[] bitfield;
+    protected static byte[] fullBitfield;
+    protected static byte[] emptyBitfiled;
+    protected static HashMap<Integer, ClientConnectionHandler> clientConnectionHandlers = new HashMap<>();
+    protected static HashMap<Integer, ServerConnectionHandler> serverConnectionHandlers = new HashMap<>();
+    protected static FilePiece[] pieces; //keep track of what File pieces I have
     protected static Util util = new Util();
     public static void main(String[] args) {
         clearOldProcessData(); //Deletes log files and peer downloaded files.
@@ -44,10 +53,6 @@ public class PeerProcess {
         }
         System.out.println("Here's all Peer Info!");
         peerInfo.print();
-
-        //Testing get methods
-        System.out.format("Number of preferred neighbors: %s%n", commonVars.get("NumberOfPreferredNeighbors"));
-        System.out.format("ID's: %s hostName: %s%n", "1004", peerInfo.getHostName("1004"));
 
         //Display this peer's info
         System.out.println("Here's this Peer's Info!");
@@ -74,9 +79,13 @@ public class PeerProcess {
     private static void initPeer(String[] args) {
         try {
             //Initialize this peer Process' info.
-            peerId = args[0];
+            try {
+                peerId = Integer.parseInt(args[0]);
+            } catch (Exception e) {
+                System.out.println("Peer id must be a 4 digit integer");
+            }
 
-            if (peerId.length() != 4) {
+            if (peerId < 1000) {
                 throw new InvalidPeerID("peer ID must have 4 digits.");
             }
 
@@ -84,6 +93,32 @@ public class PeerProcess {
             hostName = peerInfo.getHostName(peerId);
             portNumber = peerInfo.getPortNumber(peerId);
             hasCompleteFile = peerInfo.getHasCompleteFile(peerId);
+            int sizeOfBitfield = commonVars.getNumberOfPieces()/8 + 1;
+            int numOfBitsForLastPiece = commonVars.getNumberOfPieces() - (sizeOfBitfield - 1) * 8;
+            bitfield = new byte[sizeOfBitfield];
+            emptyBitfiled = new byte[sizeOfBitfield];
+            fullBitfield = new byte[sizeOfBitfield];
+            pieces = new FilePiece[commonVars.getNumberOfPieces()];
+            System.out.println("Size of bitfield: " + bitfield.length);
+
+            if (hasCompleteFile) {
+               for (int i = 0; i < bitfield.length - 1; i++) {
+                   bitfield[i] = -1;
+               }
+               bitfield[bitfield.length -1] = util.intToBigEndianBitChunk(numOfBitsForLastPiece);
+            } else {
+                for (int i = 0; i < bitfield.length - 1; i++) {
+                    bitfield[i] = 0x00;
+                }
+            }
+
+            for (int i = 0; i < bitfield.length; i++) {
+                fullBitfield[i] = -1;
+            }
+
+            for (int i = 0; i < emptyBitfiled.length; i++) {
+                fullBitfield[i] = 0x00;
+            }
 
             // Create downloading Directory
             File downloadDir = new File("peer_" + peerId);
