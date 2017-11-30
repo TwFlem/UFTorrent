@@ -151,9 +151,8 @@ public class UFTorrentClientProtocol extends PeerProcess {
         //store the file piece
         pieces[pieceIndex] = newPiece;
         //update the bitfield
-        int byteIndex = pieceIndex/8;
-        int offset = pieceIndex%8;
-        bitfield[byteIndex] = (byte)(bitfield[byteIndex] | (1 << 7-offset)); //TODO: Test this and make sure it sets properly
+        bitfield = util.setBit(pieceIndex, bitfield); //TODO: Test this and make sure it sets properly
+        //log it
         int pieceCount = util.numberOfOnes(bitfield);
         eventLogger.downloadedPiece(Integer.toString(otherPeerId),Integer.toString(pieceIndex), pieceCount);
         //if I have all the pieces, then I should update my status and log it

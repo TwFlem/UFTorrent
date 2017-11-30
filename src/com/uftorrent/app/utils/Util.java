@@ -92,6 +92,7 @@ public class Util {
         int randomSelection = ThreadLocalRandom.current().nextInt(0, interestedPieces.length);
         return randomSelection;
     }
+    //determines if a bit is one given an integer index of that bit
     public boolean isBitOne(int index, byte[] bitfield)
     {
         int byteIndex = index/8;
@@ -108,6 +109,7 @@ public class Util {
         }
     }
     //TODO: test this
+    //returns the number of one bits in a byte array. For the logging.
     public int numberOfOnes(byte[] pieces)
     {
         int count = 0;
@@ -124,6 +126,7 @@ public class Util {
         return count;
     }
     //TODO: test this
+    //set a bit to one given an integer index of that bit
     public byte[] setBit(int index, byte[] bitfield)
     {
         int byteIndex = index/8;
