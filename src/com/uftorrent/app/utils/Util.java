@@ -73,7 +73,7 @@ public class Util {
     //get a piece index from the first four bytes, given the payload (ALREADY STRIPPED OF HEADER INFO)
     public int returnPieceIndex(byte[] receivedPayload)
     {
-        int pieceIndex = -1;;
+        int pieceIndex = -1;
         pieceIndex = (receivedPayload[0] << 24) | (receivedPayload[1]  << 16) | (receivedPayload[2]  << 8) | (receivedPayload[3]);
         return pieceIndex;
     }

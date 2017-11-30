@@ -161,8 +161,10 @@ public class UFTorrentClientProtocol extends PeerProcess {
             eventLogger.downloadComplete(Integer.toString(otherPeerId));
         }
         //respond with a request message for a new piece
-        // TODO: Figure out how to determine next piece to request (need list of interested pieces to be stored somewhere
+        // randomally select a new piece to request
         int newRequest = 0;
+        byte[] possiblePieces = clientConnectionHandlers.get(peerId).possiblePieces;
+        newRequest = util.randomSelection(possiblePieces);
         byte[] bytesOfNewIndex = util.intToByteArray(newRequest);
         return new Message(4 + bytesOfNewIndex.length, (byte)0x6, bytesOfNewIndex);
     }
