@@ -1,9 +1,13 @@
 package com.uftorrent.app.utils;
 
 
+import com.uftorrent.app.protocols.FilePiece;
 import com.uftorrent.app.protocols.Message;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -133,5 +137,26 @@ public class Util {
         int offset = index%8;
         bitfield[byteIndex] = (byte)(bitfield[byteIndex] | (1 << 7-offset));
         return bitfield;
+    }
+    //TODO: test this
+    public void writeFilePiece(String fileName, FilePiece piece)
+    {
+        try {
+            byte[] bytes = piece.getFilePiece();
+            FileOutputStream fos = new FileOutputStream(fileName, true);
+            fos.write(bytes);
+            fos.close();
+        }
+        //error catching
+        catch(FileNotFoundException ex) {
+            System.out.println(
+                    "Unable to open file '" +
+                            fileName + "'");
+        }
+        catch(IOException ex) {
+            System.out.println(
+                    "Error reading file '"
+                            + fileName + "'");
+        }
     }
 }
