@@ -22,8 +22,8 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
     public boolean isInterestedInOtherPeer;
     public boolean isChoked;
     public Thread connectionThread;
-    private byte[] possiblePieces; //The bitfield representing pieces I don't have that the other peer does
-    private byte[] otherPeersBitfield;
+    public byte[] possiblePieces; //The bitfield representing pieces I don't have that the other peer does
+    public byte[] otherPeersBitfield;
     private EventLogger eventLogger = new EventLogger();
     public ClientConnectionHandler(String hostName, int port) {
         try {

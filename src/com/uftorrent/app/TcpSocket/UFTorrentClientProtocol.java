@@ -4,15 +4,18 @@ import com.uftorrent.app.main.PeerProcess;
 import com.uftorrent.app.protocols.Message;
 import com.uftorrent.app.utils.Util;
 import com.uftorrent.app.protocols.FilePiece;
+
+import java.io.File;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
-
+import com.uftorrent.app.TcpSocket.ClientConnectionHandler;
 public class UFTorrentClientProtocol extends PeerProcess {
     private EventLogger eventLogger = new EventLogger();
     private int otherPeerId;
     private Util util = new Util();
     public UFTorrentClientProtocol(int otherPeerId) {
         this.otherPeerId = otherPeerId;
+        clientConnectionHandlers.get(this.otherPeerId);
     }
     public Message handleInput(byte msgType, byte[] recievedPayload) {
         byte[] strippedPayload;
@@ -41,22 +44,26 @@ public class UFTorrentClientProtocol extends PeerProcess {
 
     //Message type 0: choke
     private Message handleChoke() {
-        //TODO: Stop sending to the peer who sent the choke. This probably shouldn't actually return a message at all.
+        //TODO: Is this fine for choking? This probably shouldn't actually return a message at all, maybe implement a -1 return message?.
         eventLogger.chokeNeighbor(Integer.toString(otherPeerId));
+        clientConnectionHandlers.get(peerId).isChoked = true;
         return new Message((byte)0x0);
     }
     //Message type 1: unchoke
     private Message handleUnchoke() {
-        //TODO: Select a piece I don't yet have from the interested bitField, and request it from whoever unchoked me
+        //TODO: Test
         eventLogger.unchokedNeighbor(Integer.toString(otherPeerId));
-        int requestedPiece = 0;
+        clientConnectionHandlers.get(peerId).isChoked = false;
+        byte[] possiblePieces = clientConnectionHandlers.get(peerId).possiblePieces;
+        int requestedPiece = util.randomSelection(possiblePieces);
         byte[] requestedArray = util.intToByteArray(requestedPiece);
         return new Message(5,(byte)0x6, requestedArray);
     }
     //message type 2: interested
     private Message handleInterested() {
-        //TODO: update the list of interested peers, probably dont send a message back?
+        //TODO: Test. probably dont send a message back?
         eventLogger.receiveInteresedMsg(Integer.toString(otherPeerId));
+        clientConnectionHandlers.get(otherPeerId).isInterested = true;
         return new Message((byte)0x2);
     }
     //message type 3: uninterested

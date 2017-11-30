@@ -85,9 +85,9 @@ public class Util {
     }
     //function to randomly select a piece from a list of pieces that the Server has that this Client does not
     //maybe I should move this to utils?
-    private int randomSelection(int[] interestedPieces)
+    public int randomSelection(byte[] interestedPieces)
     {
-        int randomSelection = ThreadLocalRandom.current().nextInt(0, interestedPieces.length + 1);
+        int randomSelection = ThreadLocalRandom.current().nextInt(0, interestedPieces.length);
         return randomSelection;
     }
 }
