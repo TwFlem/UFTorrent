@@ -17,7 +17,8 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
     private OutputStream bytesOut;
     public boolean isChokingTheOtherPeer;
     public boolean isNotInteresting;
-    private byte[] otherPeersBitfield;
+    public byte[] otherPeersBitfield;
+    public byte[] possiblePieces;
     public Thread connectionThread;
     private EventLogger eventLogger = new EventLogger();
 
