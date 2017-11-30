@@ -44,14 +44,15 @@ public class UFTorrentServerProtocol extends PeerProcess {
         }
         return handleBitField(recievedPayload);
     }
-    //Message type 0: choke
     private Message handleChoke() {
         //TODO: Stop sending to the peer who sent the choke. This probably shouldn't actually return a message at all.
+        eventLogger.chokeNeighbor(Integer.toString(otherPeerId));
         return new Message((byte)0x0);
     }
     //Message type 1: unchoke
     private Message handleUnchoke() {
         //TODO: Select a piece I don't yet have from the interested bitField, and request it from whoever unchoked me
+        eventLogger.unchokedNeighbor(Integer.toString(otherPeerId));
         int requestedPiece = 0;
         byte[] requestedArray = util.intToByteArray(requestedPiece);
         return new Message(5,(byte)0x6, requestedArray);
@@ -59,11 +60,13 @@ public class UFTorrentServerProtocol extends PeerProcess {
     //message type 2: interested
     private Message handleInterested() {
         //TODO: update the list of interested peers, probably dont send a message back?
+        eventLogger.receiveInteresedMsg(Integer.toString(otherPeerId));
         return new Message((byte)0x2);
     }
     //message type 3: uninterested
     private Message handleUninterested() {
         //TODO: update the list of interested peers, probably don't send a message back?
+        eventLogger.receiveNotInterestedMsg(Integer.toString(otherPeerId));
         return new Message((byte)0x2);
     }
     //message type 4: Have
@@ -71,6 +74,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
     private Message handleHave(byte[] receivedPayload)
     {
         int pieceIndex = (receivedPayload[0] << 24) | (receivedPayload[1]  << 16) | (receivedPayload[2]  << 8) | (receivedPayload[3]);
+        eventLogger.receivedHaveMsg(Integer.toString(otherPeerId), Integer.toString(pieceIndex));
         //now find that piece in my bitfield and see if I already have it. If I do, send not interested message. If i dont, send an interested message.
         int byteIndex = pieceIndex/8;
         int offset = pieceIndex%8;
@@ -130,11 +134,13 @@ public class UFTorrentServerProtocol extends PeerProcess {
         return new Message(1 + pieceIndex, (byte)0x7, returnPayload);
     }
     //message type 7: piece
+    //message type 7: piece
     private Message handlePiece(byte[] receivedPayload)
     {
         //get a piece with the first 4 bytes as the index. Save it in my piece array, update my bitfield, and continue
         int pieceIndex = util.returnPieceIndex(receivedPayload);
-        FilePiece newPiece = new FilePiece(new byte[commonVars.getNumberOfPieces()], pieceIndex);
+        byte[] completeBitField = util.getCompleteBitfield(bitfield.length);
+        FilePiece newPiece = new FilePiece(new byte[(int)commonVars.getPieceSize()], pieceIndex);
         //write the bytes into a file piece
         for (int i = 4; i < receivedPayload.length; i++)
         {
@@ -142,8 +148,18 @@ public class UFTorrentServerProtocol extends PeerProcess {
         }
         //store the file piece
         pieces[pieceIndex] = newPiece;
-        //TODO: update the bitfield
-        //respond with a request message for a new piece TODO: Figure out how to determine next piece to request (need list of interested pieces to be stored somewhere
+        //update the bitfield
+        int byteIndex = pieceIndex/8;
+        int offset = pieceIndex%8;
+        bitfield[byteIndex] = (byte)(bitfield[byteIndex] | (1 << 7-offset)); //TODO: Test this and make sure it sets properly
+        eventLogger.downloadedPiece(Integer.toString(otherPeerId),Integer.toString(pieceIndex), 5); //TODO: Write util to determine how many pieces I currently have
+        //if I have all the pieces, then I should update my status and log it
+        if (Arrays.equals(completeBitField, bitfield))
+        {
+            eventLogger.downloadComplete(Integer.toString(otherPeerId));
+        }
+        //respond with a request message for a new piece
+        // TODO: Figure out how to determine next piece to request (need list of interested pieces to be stored somewhere
         int newRequest = 0;
         byte[] bytesOfNewIndex = util.intToByteArray(newRequest);
         return new Message(4 + bytesOfNewIndex.length, (byte)0x6, bytesOfNewIndex);
