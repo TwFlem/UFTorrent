@@ -8,6 +8,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+<<<<<<< HEAD
+=======
+
+import static java.lang.System.exit;
+>>>>>>> develop
 
 public class Util {
     // Calculate the size from a byte array

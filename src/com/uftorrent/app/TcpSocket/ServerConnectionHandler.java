@@ -3,6 +3,7 @@ package com.uftorrent.app.TcpSocket;
 import com.uftorrent.app.main.PeerProcess;
 import java.io.*;
 import java.net.Socket;
+import java.util.concurrent.TimeUnit;
 
 public class ServerConnectionHandler extends PeerProcess implements Runnable {
     private int otherPeerId;
