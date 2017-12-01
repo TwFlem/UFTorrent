@@ -4,7 +4,7 @@ import com.uftorrent.app.main.PeerProcess;
 import com.uftorrent.app.protocols.FilePiece;
 import com.uftorrent.app.protocols.Message;
 import com.uftorrent.app.utils.Util;
-import com.uftorrent.app.setup.env.CommonVars;
+
 import java.util.Arrays;
 
 public class UFTorrentServerProtocol extends PeerProcess {
@@ -62,7 +62,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
         int pieceIndex = (receivedPayload[0] << 24) | (receivedPayload[1]  << 16) | (receivedPayload[2]  << 8) | (receivedPayload[3]);
         eventLogger.receivedHaveMsg(Integer.toString(otherPeerId), Integer.toString(pieceIndex));
         //Update other peers bitfield with this info
-        serverConnectionHandlers.get(otherPeerId).otherPeersBitfield = util.setBit(pieceIndex,serverConnectionHandlers.get(otherPeerId).otherPeersBitfield );
+        serverConnectionHandlers.get(otherPeerId).otherPeersBitfield = util.setBit1(pieceIndex,serverConnectionHandlers.get(otherPeerId).otherPeersBitfield );
         //now find that piece in my bitfield and see if I already have it. If I do, send not interested message. If i dont, send an interested message.
         boolean isOne = util.isBitOne(pieceIndex, bitfield);
         if (isOne)
@@ -101,7 +101,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
         for (int i = receivedPayload.length; i < pieces[pieceIndex].getFilePiece().length; i++) {
             newPayload[i] = pieces[pieceIndex].getFilePiece()[i];
         }
-        serverConnectionHandlers.get(otherPeerId).otherPeersBitfield = util.setBit(pieceIndex,serverConnectionHandlers.get(otherPeerId).otherPeersBitfield );
+        serverConnectionHandlers.get(otherPeerId).otherPeersBitfield = util.setBit1(pieceIndex,serverConnectionHandlers.get(otherPeerId).otherPeersBitfield );
         System.out.println("tw updated other bitfield after receiving " + pieceIndex);
         util.printBitfieldAsBinaryString(serverConnectionHandlers.get(otherPeerId).otherPeersBitfield);
         return new Message(1 + newPayload.length, (byte)0x7, newPayload);
@@ -120,7 +120,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
         //store the file piece
         pieces[pieceIndex] = newPiece;
         //update the bitfield
-        bitfield = util.setBit(pieceIndex, bitfield); //TODO: Test this and make sure it sets properly
+        bitfield = util.setBit1(pieceIndex, bitfield); //TODO: Test this and make sure it sets properly
         //log it
         int pieceCount = util.numberOfOnes(bitfield);
         eventLogger.downloadedPiece(Integer.toString(otherPeerId),Integer.toString(pieceIndex), pieceCount);

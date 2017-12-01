@@ -5,10 +5,8 @@ import com.uftorrent.app.protocols.Message;
 import com.uftorrent.app.utils.Util;
 import com.uftorrent.app.protocols.FilePiece;
 
-import java.io.File;
 import java.util.Arrays;
-import java.util.concurrent.ThreadLocalRandom;
-import com.uftorrent.app.TcpSocket.ClientConnectionHandler;
+
 public class UFTorrentClientProtocol extends PeerProcess {
     private EventLogger eventLogger = new EventLogger();
     private int otherPeerId;
@@ -80,7 +78,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
         int pieceIndex = (receivedPayload[0] << 24) | (receivedPayload[1]  << 16) | (receivedPayload[2]  << 8) | (receivedPayload[3]);
         eventLogger.receivedHaveMsg(Integer.toString(otherPeerId), Integer.toString(pieceIndex));
         //Update other peers bitfield with this info
-        clientConnectionHandlers.get(otherPeerId).otherPeersBitfield = util.setBit(pieceIndex,clientConnectionHandlers.get(otherPeerId).otherPeersBitfield );
+        clientConnectionHandlers.get(otherPeerId).otherPeersBitfield = util.setBit1(pieceIndex,clientConnectionHandlers.get(otherPeerId).otherPeersBitfield );
         //now find that piece in my bitfield and see if I already have it. If I do, send not interested message. If i dont, send an interested message.
         boolean isOne = util.isBitOne(pieceIndex, bitfield);
         if (isOne)
@@ -147,10 +145,15 @@ public class UFTorrentClientProtocol extends PeerProcess {
         //store the file piece
         pieces[pieceIndex] = newPiece;
 
+//        for(clientConnectionHandlers.get(p))
+
         //update the bitfield
-        bitfield = util.setBit(pieceIndex, bitfield); //TODO: Test this and make sure it sets properly
+        bitfield = util.setBit1(pieceIndex, bitfield); //TODO: Test this and make sure it sets properly
         //log it
         int pieceCount = util.numberOfOnes(bitfield);
+        util.setBit0(pieceIndex, clientConnectionHandlers.get(otherPeerId).possiblePieces);
+        System.out.println("tw updated interested after receiving " + pieceIndex);
+        util.printBitfieldAsBinaryString(clientConnectionHandlers.get(otherPeerId).possiblePieces);
         eventLogger.downloadedPiece(Integer.toString(otherPeerId),Integer.toString(pieceIndex), pieceCount);
         //if I have all the pieces, then I should update my status and log it
         if (Arrays.equals(fullBitfield, bitfield))
@@ -162,20 +165,6 @@ public class UFTorrentClientProtocol extends PeerProcess {
             }
         }
 
-        byte[] interestedBitfield = new byte[bitfield.length];
-        for (int i = 0; i < clientConnectionHandlers.get(otherPeerId).otherPeersBitfield.length; i++)
-        {
-            //bit operations to find what Server has that this client doesn't
-            int currentByte = (int)clientConnectionHandlers.get(otherPeerId).otherPeersBitfield[i];
-            int currentClientByte = (int)bitfield[i];
-            currentClientByte = ~currentClientByte;
-            int interestedByte = currentClientByte & currentByte;
-            interestedBitfield[i] = (byte)interestedByte;
-        }
-        //store the interested bitfield for later reference
-        clientConnectionHandlers.get(otherPeerId).possiblePieces = interestedBitfield;
-        System.out.println("tw updated interested after receiving " + pieceIndex);
-        util.printBitfieldAsBinaryString(clientConnectionHandlers.get(otherPeerId).possiblePieces);
         //respond with a request message for a new piece
         // randomally select a new piece to request
         int newRequest = 0;

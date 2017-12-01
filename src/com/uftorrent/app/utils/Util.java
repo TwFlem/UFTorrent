@@ -81,20 +81,20 @@ public class Util {
     }
     //function to randomly select a piece from a list of pieces that the Server has that this Client does not
     //maybe I should move this to utils?
-    public int randomSelection(byte[] interestedPieces,int filePieceSize)
+    public int randomSelection(byte[] interestedPieces, int filePieceSize)
     {
         ArrayList<Integer> poolOfRandomFilePieceIndecies = new ArrayList<>();
 
-        int count = 0;
+        int byteStrIndex = 0;
         for (int i = 0; i < interestedPieces.length; i++) {
             int currentByte = interestedPieces[i];
             currentByte = currentByte < 0 ? currentByte & 0xff : currentByte;
             char[] binaryCharArray = Integer.toBinaryString(currentByte).toCharArray();
             for (char c : binaryCharArray) {
                 if (c == '1') {
-                    poolOfRandomFilePieceIndecies.add(count);
+                    poolOfRandomFilePieceIndecies.add(byteStrIndex);
                 }
-                count++;
+                byteStrIndex++;
             }
         }
 
@@ -137,11 +137,19 @@ public class Util {
     }
     //TODO: test this
     //set a bit to one given an integer index of that bit
-    public byte[] setBit(int index, byte[] bitfield)
+    public byte[] setBit1(int index, byte[] bitfield)
     {
         int byteIndex = index/8;
         int offset = index%8;
         bitfield[byteIndex] = (byte)(bitfield[byteIndex] | (1 << 7-offset));
+        return bitfield;
+    }
+
+    public byte[] setBit0(int index, byte[] bitfield)
+    {
+        int byteIndex = index/8;
+        int offset = index%8;
+        bitfield[byteIndex] = (byte)(bitfield[byteIndex] & ~(1 << 7-offset));
         return bitfield;
     }
     //TODO: test this
