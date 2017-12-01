@@ -32,7 +32,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
             case 0x5:
                 return handleBitField(recievedPayload);
             case 0x6:
-                return handleRequest(recievedPayload);
+                break;
             case 0x7:
                 return handlePiece(recievedPayload);
             default:
@@ -128,15 +128,6 @@ public class UFTorrentClientProtocol extends PeerProcess {
         //otherwise, send an interested message to let the other peer know I'm interested in its pieces.
         return new Message((byte)0x2);
     }
-    //message type 6: request
-    //should be mostly correct
-    //TODO: Test this.
-    private Message handleRequest(byte[] receivedPayload) {
-        int pieceIndex = util.returnPieceIndex(receivedPayload);
-        FilePiece returnPiece = pieces[pieceIndex];
-        byte[] returnPayload = returnPiece.getFilePiece();
-        return new Message(1 + pieceIndex, (byte)0x7, returnPayload);
-    }
     //message type 7: piece
     //TODO: Test this.
     //TODO: Blast out have messages after downloading a piece
@@ -178,7 +169,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
         }
         newRequest = util.randomSelection(possiblePieces);
         byte[] bytesOfNewIndex = util.intToByteArray(newRequest);
-        return new Message(4 + bytesOfNewIndex.length, (byte)0x6, bytesOfNewIndex);
+        return new Message(1 + bytesOfNewIndex.length, (byte)0x6, bytesOfNewIndex);
     }
 }
 

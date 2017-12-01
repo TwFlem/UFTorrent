@@ -167,12 +167,12 @@ public class PeerProcess {
             int newStartIndex;
             for (int i = 0; i < pieceArray.length - 1; i++) {
                 newStartIndex = i * pieceSize;
-                pieceArray[i] = new FilePiece(Arrays.copyOfRange(data, newStartIndex, newStartIndex + pieceSize), pieceSize);
+                pieceArray[i] = new FilePiece(Arrays.copyOfRange(data, newStartIndex, newStartIndex + pieceSize), i);
             }
             int lastPieceIndex = pieceArray.length - 1;
             int lastPieceStartIndex = lastPieceIndex * pieceSize;
             pieceArray[lastPieceIndex] =
-                    new FilePiece(Arrays.copyOfRange(data, lastPieceStartIndex, lastPieceStartIndex + pieceSize), pieceSize);
+                    new FilePiece(Arrays.copyOfRange(data, lastPieceStartIndex, lastPieceStartIndex + pieceSize), pieceArray.length - 1);
             return pieceArray;
         }
 
