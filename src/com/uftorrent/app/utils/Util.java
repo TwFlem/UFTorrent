@@ -6,6 +6,7 @@ import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.System.exit;
 
@@ -89,5 +90,12 @@ public class Util {
     {
         int randomSelection = ThreadLocalRandom.current().nextInt(0, interestedPieces.length + 1);
         return randomSelection;
+    }
+    public void sleep(int timeInSeconds) {
+        try {
+            TimeUnit.SECONDS.sleep(timeInSeconds);
+        } catch (Exception e) {
+
+        }
     }
 }
