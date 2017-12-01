@@ -47,9 +47,13 @@ public class PeerProcess {
         commonVars.print();
         //testing for reading file
         System.out.println("Heres the file reader in action!");
-        FilePiece[] filePieces = readFileIntoPiece("Common.cfg", 3);
-        for (int i = 0; i < filePieces.length; i++) {
-            writeFilePiece(downloadFilePath, filePieces[i]);
+
+        if (hasCompleteFile) {
+            FilePiece[] filePieces = readFileIntoPiece("test.txt", (int) commonVars.getPieceSize());
+            pieces = filePieces;
+            for (int i = 0; i < filePieces.length; i++) {
+                writeFilePiece(downloadFilePath, filePieces[i]);
+            }
         }
         System.out.println("Here's all Peer Info!");
         peerInfo.print();
@@ -172,32 +176,18 @@ public class PeerProcess {
     //This method will read a file into an appropriate number of FilePieces, and return an array of these pieces
     private static FilePiece[] readFileIntoPiece(String fileName, int pieceSize) {
         try {
-            // Use this for reading the data.
-            byte[] buffer = new byte[pieceSize];
-            int total = 0;
-            int nRead = 0;
-            int pieceCount = 0;
-            int fileLength = Math.toIntExact(new File(fileName).length());
-            FilePiece[] pieceArray = new FilePiece[fileLength/pieceSize];
+            FilePiece[] pieceArray = new FilePiece[commonVars.getNumberOfPieces()];
             Path path = Paths.get(fileName);
             byte[] data = Files.readAllBytes(path);
-            //Debugging code
-            /*
-            System.out.println("FILE READER INFO HERE");
-            System.out.println(new String(data));
-            */
-            for (int i = 0; i < pieceArray.length; i++) {
-                byte[] section = new byte[pieceSize];
-
-                pieceArray[i] = new FilePiece(Arrays.copyOfRange(data, i*pieceSize, i*3 + pieceSize), pieceSize);
+            int newStartIndex;
+            for (int i = 0; i < pieceArray.length - 1; i++) {
+                newStartIndex = i * pieceSize;
+                pieceArray[i] = new FilePiece(Arrays.copyOfRange(data, newStartIndex, newStartIndex + pieceSize), pieceSize);
             }
-            //debugging code
-            /*
-            for (int i = 0; i < pieceArray.length; i++)
-            {
-                System.out.println(new String(pieceArray[i].getFilePiece()));
-            }
-            */
+            int lastPieceIndex = pieceArray.length - 1;
+            int lastPieceStartIndex = lastPieceIndex * pieceSize;
+            pieceArray[lastPieceIndex] =
+                    new FilePiece(Arrays.copyOfRange(data, lastPieceStartIndex, lastPieceStartIndex + pieceSize), pieceSize);
             return pieceArray;
         }
 
