@@ -54,7 +54,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
         eventLogger.unchokedNeighbor(Integer.toString(otherPeerId));
         clientConnectionHandlers.get(otherPeerId).isChoked = false;
         byte[] possiblePieces = clientConnectionHandlers.get(otherPeerId).possiblePieces;
-        int requestedPiece = util.randomSelection(possiblePieces);
+        int requestedPiece = util.randomSelection(possiblePieces, pieces.length);
         byte[] requestedArray = util.intToByteArray(requestedPiece);
         return new Message(5,(byte)0x6, requestedArray);
     }
@@ -136,6 +136,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
     {
         //get a piece with the first 4 bytes as the index. Save it in my piece array, update my bitfield, and continue
         int pieceIndex = util.returnPieceIndex(receivedPayload);
+        pieceIndex = pieceIndex < 0 ? pieceIndex & 0xff : pieceIndex;
         byte[] emptyBitfield = new byte[bitfield.length];
         FilePiece newPiece = new FilePiece(new byte[(int)commonVars.getPieceSize()], pieceIndex);
         //write the bytes into a file piece
@@ -145,6 +146,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
         }
         //store the file piece
         pieces[pieceIndex] = newPiece;
+
         //update the bitfield
         bitfield = util.setBit(pieceIndex, bitfield); //TODO: Test this and make sure it sets properly
         //log it
@@ -159,6 +161,21 @@ public class UFTorrentClientProtocol extends PeerProcess {
                 util.writeFilePiece(commonVars.getFileName(), pieces[i]); //TODO: test this and make sure the filename is right
             }
         }
+
+        byte[] interestedBitfield = new byte[bitfield.length];
+        for (int i = 0; i < clientConnectionHandlers.get(otherPeerId).otherPeersBitfield.length; i++)
+        {
+            //bit operations to find what Server has that this client doesn't
+            int currentByte = (int)clientConnectionHandlers.get(otherPeerId).otherPeersBitfield[i];
+            int currentClientByte = (int)bitfield[i];
+            currentClientByte = ~currentClientByte;
+            int interestedByte = currentClientByte & currentByte;
+            interestedBitfield[i] = (byte)interestedByte;
+        }
+        //store the interested bitfield for later reference
+        clientConnectionHandlers.get(otherPeerId).possiblePieces = interestedBitfield;
+        System.out.println("tw updated interested after receiving " + pieceIndex);
+        util.printBitfieldAsBinaryString(clientConnectionHandlers.get(otherPeerId).possiblePieces);
         //respond with a request message for a new piece
         // randomally select a new piece to request
         int newRequest = 0;
@@ -167,7 +184,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
         if (Arrays.equals(emptyBitfield, possiblePieces)) {
             return new Message((byte)0x3);
         }
-        newRequest = util.randomSelection(possiblePieces);
+        newRequest = util.randomSelection(possiblePieces, pieces.length);
         byte[] bytesOfNewIndex = util.intToByteArray(newRequest);
         return new Message(1 + bytesOfNewIndex.length, (byte)0x6, bytesOfNewIndex);
     }

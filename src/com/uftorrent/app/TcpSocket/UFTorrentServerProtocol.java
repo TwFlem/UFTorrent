@@ -91,6 +91,8 @@ public class UFTorrentServerProtocol extends PeerProcess {
     //should be mostly correct
     private Message handleRequest(byte[] receivedPayload) {
         int pieceIndex = util.returnPieceIndex(receivedPayload);
+        pieceIndex = pieceIndex < 0 ? pieceIndex & 0xff : pieceIndex;
+
         System.out.println("server " + peerId + " handling request for file piece index " + pieceIndex + " for " + this.otherPeerId);
         byte[] newPayload = new byte[receivedPayload.length + pieces[pieceIndex].getFilePiece().length];
         for (int i = 0; i < receivedPayload.length; i++) {
@@ -99,6 +101,9 @@ public class UFTorrentServerProtocol extends PeerProcess {
         for (int i = receivedPayload.length; i < pieces[pieceIndex].getFilePiece().length; i++) {
             newPayload[i] = pieces[pieceIndex].getFilePiece()[i];
         }
+        serverConnectionHandlers.get(otherPeerId).otherPeersBitfield = util.setBit(pieceIndex,serverConnectionHandlers.get(otherPeerId).otherPeersBitfield );
+        System.out.println("tw updated other bitfield after receiving " + pieceIndex);
+        util.printBitfieldAsBinaryString(serverConnectionHandlers.get(otherPeerId).otherPeersBitfield);
         return new Message(1 + newPayload.length, (byte)0x7, newPayload);
     }
     //message type 7: piece
@@ -128,7 +133,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
         // randomally select a new piece to request
         int newRequest = 0;
         byte[] possiblePieces = serverConnectionHandlers.get(otherPeerId).possiblePieces;
-        newRequest = util.randomSelection(possiblePieces);
+        newRequest = util.randomSelection(possiblePieces, pieces.length);
         byte[] bytesOfNewIndex = util.intToByteArray(newRequest);
         return new Message(4 + bytesOfNewIndex.length, (byte)0x6, bytesOfNewIndex);
     }
