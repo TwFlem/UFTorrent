@@ -46,7 +46,7 @@ public class PeerProcess {
         System.out.println("Heres the file reader in action!");
 
         if (peerInfo.getHasCompleteFile(peerId)) {
-            FilePiece[] filePieces = readFileIntoPiece("test.txt", (int) commonVars.getPieceSize());
+            FilePiece[] filePieces = readFileIntoPiece(commonVars.getFileName(), (int) commonVars.getPieceSize());
             pieces = filePieces;
             for (int i = 0; i < filePieces.length; i++) {
                 writeFilePiece(downloadFilePath, filePieces[i]);

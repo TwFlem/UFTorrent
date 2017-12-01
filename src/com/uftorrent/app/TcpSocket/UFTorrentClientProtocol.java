@@ -26,7 +26,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
             case 0x3:
                 return handleUninterested();
             case 0x4:
-                return handleHave(recievedPayload);
+                break;
             case 0x5:
                 return handleBitField(recievedPayload);
             case 0x6:
@@ -68,28 +68,6 @@ public class UFTorrentClientProtocol extends PeerProcess {
         eventLogger.receiveNotInterestedMsg(Integer.toString(otherPeerId));
         clientConnectionHandlers.get(otherPeerId).isInterested = true;
         return new Message((byte)0x2);
-    }
-    //message type 4: Have
-    //handle a have message, this should be complete
-    //TODO: Test this.
-    private Message handleHave(byte[] receivedPayload)
-    {
-        int pieceIndex = (receivedPayload[0] << 24) | (receivedPayload[1]  << 16) | (receivedPayload[2]  << 8) | (receivedPayload[3]);
-        eventLogger.receivedHaveMsg(Integer.toString(otherPeerId), Integer.toString(pieceIndex));
-        //Update other peers bitfield with this info
-        clientConnectionHandlers.get(otherPeerId).otherPeersBitfield = util.setBit1(pieceIndex,clientConnectionHandlers.get(otherPeerId).otherPeersBitfield );
-        //now find that piece in my bitfield and see if I already have it. If I do, send not interested message. If i dont, send an interested message.
-        boolean isOne = util.isBitOne(pieceIndex, bitfield);
-        if (isOne)
-        {
-            //I already have the piece, so I ain't interested
-            return new Message((byte)0x3);
-        }
-        else
-        {
-            //I don't have the piece, so send an interested message
-            return new Message((byte)0x2);
-        }
     }
     // Message type 5: bitfield
     private Message handleBitField(byte[] recievedBitfield) {

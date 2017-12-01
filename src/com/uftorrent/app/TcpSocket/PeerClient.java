@@ -5,8 +5,6 @@ import com.uftorrent.app.main.PeerProcess;
 import java.util.concurrent.TimeUnit;
 
 public class PeerClient extends PeerProcess implements Runnable {
-
-    private EventLogger eventLogger = new EventLogger();
     public void run() {
         try {
             System.out.println("Hello from a client thread!");
