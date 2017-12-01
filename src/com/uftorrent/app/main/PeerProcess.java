@@ -9,7 +9,6 @@ import com.uftorrent.app.exceptions.InvalidPeerID;
 import com.uftorrent.app.setup.env.PeerInfo;
 import com.uftorrent.app.utils.Util;
 import com.uftorrent.app.protocols.FilePiece;
-import com.uftorrent.app.protocols.Message;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -34,7 +33,7 @@ public class PeerProcess {
     protected static String downloadFilePath;
     protected static byte[] bitfield;
     protected static byte[] fullBitfield;
-    protected static byte[] emptyBitfiled;
+    protected static byte[] emptyBitfield;
     protected static HashMap<Integer, ClientConnectionHandler> clientConnectionHandlers = new HashMap<>();
     protected static HashMap<Integer, ServerConnectionHandler> serverConnectionHandlers = new HashMap<>();
     protected static FilePiece[] pieces; //keep track of what File pieces I have
@@ -97,10 +96,10 @@ public class PeerProcess {
             hostName = peerInfo.getHostName(peerId);
             portNumber = peerInfo.getPortNumber(peerId);
             hasCompleteFile = peerInfo.getHasCompleteFile(peerId);
-            int sizeOfBitfield = commonVars.getNumberOfPieces()/8 + 1;
+            int sizeOfBitfield = commonVars.getNumberOfPieces();
             int numOfBitsForLastPiece = commonVars.getNumberOfPieces() - (sizeOfBitfield - 1) * 8;
             bitfield = new byte[sizeOfBitfield];
-            emptyBitfiled = new byte[sizeOfBitfield];
+            emptyBitfield = new byte[sizeOfBitfield];
             fullBitfield = new byte[sizeOfBitfield];
             pieces = new FilePiece[commonVars.getNumberOfPieces()];
             System.out.println("Size of bitfield: " + bitfield.length);
@@ -120,7 +119,7 @@ public class PeerProcess {
                 fullBitfield[i] = -1;
             }
 
-            for (int i = 0; i < emptyBitfiled.length; i++) {
+            for (int i = 0; i < emptyBitfield.length; i++) {
                 fullBitfield[i] = 0x00;
             }
 

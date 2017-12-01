@@ -4,7 +4,6 @@ package com.uftorrent.app.TcpSocket;
 import com.uftorrent.app.main.PeerProcess;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 

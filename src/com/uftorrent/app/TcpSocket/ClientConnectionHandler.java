@@ -90,12 +90,11 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
                 int messageSize = util.packetSize(sizeHeaderFromServer);
                 System.out.println("Size of message From Server: " + messageSize);
 
-                // ----- Temporary --------
-                if (msgType[0] == 0x05 || messageSize == 0) {
-                    System.out.println("Client connectionHandler " + this.otherPeerId + " has closed");
+                if (hasCompleteFile || messageSize == 0) {
+                    socketToPeer.close();
+                    System.out.println(peerId + " client has complete file, closing connection to " + this.otherPeerId + " server");
                     break;
                 }
-                // -------------------------
 
                 bytesIn.read(msgType, 0, 1);
                 System.out.println("Message type of server: " + msgType[0]);

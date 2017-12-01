@@ -2,7 +2,9 @@ package com.uftorrent.app.TcpSocket;
 
 import com.uftorrent.app.main.PeerProcess;
 import java.io.*;
+import java.lang.reflect.Array;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 public class ServerConnectionHandler extends PeerProcess implements Runnable {
@@ -53,12 +55,11 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
                 int messageSize = util.packetSize(sizeHeaderFromClient);
                 System.out.println("Size of message From Client: " + messageSize);
 
-                // ----- Temporary --------
-                if (msgType[0] == 0x05 || messageSize == 0) {
-                    System.out.println("Server ConnectionHandler " + this.otherPeerId + " closed");
+                if (clientConnection.isClosed() || Arrays.equals(fullBitfield, this.otherPeersBitfield) || messageSize == 0) {
+                    clientConnection.close();
+                    System.out.println(this.otherPeerId + " client has complete file, " + peerId + " sever thread is ending");
                     break;
                 }
-                // -------------------------
 
                 bytesIn.read(msgType, 0, 1);
                 System.out.println("Message type of client: " + msgType[0]);
