@@ -3,7 +3,6 @@ package com.uftorrent.app.TcpSocket;
 import com.uftorrent.app.main.PeerProcess;
 import java.io.*;
 import java.net.Socket;
-import static java.lang.System.exit;
 
 public class ServerConnectionHandler extends PeerProcess implements Runnable {
     private int otherPeerId;
@@ -28,18 +27,14 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
             bytesOut = this.clientConnection.getOutputStream();
         } catch (Exception e) {
             System.out.println("Unable to establish a sever connection handler");
-            exit(1);
         }
+        this.otherPeerId = waitForHandshake();
+        serverConnectionHandlers.put(this.otherPeerId, this);
+        System.out.println("ServerConnectionHandler for peer " + otherPeerId);
+        this.handOut.println(handshakeMessage);
     }
     public void run() {
         try {
-            otherPeerId = waitForHandshake();
-
-            serverConnectionHandlers.put(otherPeerId, this);
-
-            this.handOut.println(handshakeMessage);
-
-            System.out.println("ServerConnectionHandler for peer " + otherPeerId);
             startListening();
 
         } catch (Exception e) {
@@ -57,6 +52,13 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
                 int messageSize = util.packetSize(sizeHeaderFromClient);
                 System.out.println("Size of message From Client: " + messageSize);
 
+                // ----- Temporary --------
+                if (msgType[0] == 0x05 || messageSize == 0) {
+                    System.out.println("Server ConnectionHandler " + this.otherPeerId + " closed");
+                    break;
+                }
+                // -------------------------
+
                 bytesIn.read(msgType, 0, 1);
                 System.out.println("Message type of client: " + msgType[0]);
 
@@ -67,11 +69,6 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
                 bytesOut.write(protocol.handleInput(msgType[0], msgBody).msgToByteArray());
             } catch(Exception e) {
                 System.out.println("Server ConnectionHandler " + this.otherPeerId + " closed\n" + e + "\n");
-                exit(1);
-            }
-
-            if (sizeHeaderFromClient[0] == 'z') {
-                break;
             }
         }
     }
@@ -89,7 +86,6 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
         }
         catch(Exception e) {
             System.out.print("Whoops! Server unexpectedly quit!\n" + e.getMessage());
-            exit(1);
         }
         return 0;
     }

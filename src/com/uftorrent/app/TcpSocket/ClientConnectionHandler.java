@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.Socket;
+import java.sql.Time;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.System.exit;
 
@@ -26,26 +28,28 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
     public byte[] otherPeersBitfield;
     private EventLogger eventLogger = new EventLogger();
     public ClientConnectionHandler(String hostName, int port) {
-        try {
-            this.socketToPeer = new Socket(hostName, port);
-            this.isInterested = false;
-            handOut = new PrintStream(socketToPeer.getOutputStream(), true);
-            handIn = new DataInputStream(socketToPeer.getInputStream());
-            bytesIn = socketToPeer.getInputStream();
-            bytesOut = socketToPeer.getOutputStream();
-        } catch(Exception e) {
-            System.out.println("Unable to connect to " + hostName + " at " + port);
-        }
+        Exception cantConnect = new Exception();
+        while (cantConnect != null)
+            try {
+                util.sleep(1);
+                this.socketToPeer = new Socket(hostName, port);
+                this.isInterested = false;
+                handOut = new PrintStream(socketToPeer.getOutputStream(), true);
+                handIn = new DataInputStream(socketToPeer.getInputStream());
+                bytesIn = socketToPeer.getInputStream();
+                bytesOut = socketToPeer.getOutputStream();
+                cantConnect = null;
+            } catch(Exception e) {
+                cantConnect = e;
+                System.out.println("Unable to connect to " + hostName + " at " + port);
+            }
+            handOut.println(handshakeMessage);
+            this.otherPeerId = waitForHandshake();
+        clientConnectionHandlers.put(otherPeerId, this);
+        System.out.println("ClientConnectionHandler for " + this.otherPeerId);
     }
     public void run() {
         try {
-
-            handOut.println(handshakeMessage);
-            this.otherPeerId = waitForHandshake();
-
-            clientConnectionHandlers.put(otherPeerId, this);
-            System.out.println("ClientConnectionHandler for " + this.otherPeerId);
-
             Message initialBitfieldMessage = new Message(bitfield.length + 1, (byte)5, bitfield);
             bytesOut.write(initialBitfieldMessage.msgToByteArray());
 
@@ -71,7 +75,6 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
         }
         catch(Exception e) {
             System.out.print("Whoops! Server unexpectedly quit!\n" + e.getMessage());
-            exit(1);
         }
         return 0;
     }
@@ -87,6 +90,13 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
                 int messageSize = util.packetSize(sizeHeaderFromServer);
                 System.out.println("Size of message From Server: " + messageSize);
 
+                // ----- Temporary --------
+                if (msgType[0] == 0x05 || messageSize == 0) {
+                    System.out.println("Client connectionHandler " + this.otherPeerId + " has closed");
+                    break;
+                }
+                // -------------------------
+
                 bytesIn.read(msgType, 0, 1);
                 System.out.println("Message type of server: " + msgType[0]);
 
@@ -99,9 +109,6 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
                 System.out.println("Problem Reading from Server " + this.otherPeerId + "\n" + e + "\n");
             }
 
-            if (msgType[0] == 0x05) {
-                break;
-            }
         }
 
     }

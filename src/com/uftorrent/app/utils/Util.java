@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 public class Util {
     // Calculate the size from a byte array
@@ -132,8 +133,7 @@ public class Util {
         return bitfield;
     }
     //TODO: test this
-    public void writeFilePiece(String fileName, FilePiece piece)
-    {
+    public void writeFilePiece(String fileName, FilePiece piece) {
         try {
             byte[] bytes = piece.getFilePiece();
             FileOutputStream fos = new FileOutputStream(fileName, true);
@@ -141,15 +141,21 @@ public class Util {
             fos.close();
         }
         //error catching
-        catch(FileNotFoundException ex) {
+        catch (FileNotFoundException ex) {
             System.out.println(
                     "Unable to open file '" +
                             fileName + "'");
-        }
-        catch(IOException ex) {
+        } catch (IOException ex) {
             System.out.println(
                     "Error reading file '"
                             + fileName + "'");
+        }
+    }
+    public void sleep(int timeInSeconds) {
+        try {
+            TimeUnit.SECONDS.sleep(timeInSeconds);
+        } catch (Exception e) {
+
         }
     }
 }

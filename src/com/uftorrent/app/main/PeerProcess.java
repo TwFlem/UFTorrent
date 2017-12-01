@@ -35,8 +35,8 @@ public class PeerProcess {
     protected static byte[] bitfield;
     protected static byte[] fullBitfield;
     protected static byte[] emptyBitfiled;
-    protected HashMap<Integer, ClientConnectionHandler> clientConnectionHandlers = new HashMap<>();
-    protected HashMap<Integer, ServerConnectionHandler> serverConnectionHandlers = new HashMap<>();
+    protected static HashMap<Integer, ClientConnectionHandler> clientConnectionHandlers = new HashMap<>();
+    protected static HashMap<Integer, ServerConnectionHandler> serverConnectionHandlers = new HashMap<>();
     protected static FilePiece[] pieces; //keep track of what File pieces I have
     protected static Util util = new Util();
     public static void main(String[] args) {
