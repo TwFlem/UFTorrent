@@ -85,19 +85,11 @@ public class Util {
     {
         ArrayList<Integer> poolOfRandomFilePieceIndecies = new ArrayList<>();
 
-        int byteStrIndex = 0;
-        for (int i = 0; i < interestedPieces.length; i++) {
-            int currentByte = interestedPieces[i];
-            currentByte = currentByte < 0 ? currentByte & 0xff : currentByte;
-            char[] binaryCharArray = Integer.toBinaryString(currentByte).toCharArray();
-            for (char c : binaryCharArray) {
-                if (c == '1') {
-                    poolOfRandomFilePieceIndecies.add(byteStrIndex);
-                }
-                byteStrIndex++;
+        for (int i = 0; i < filePieceSize; i++) {
+            if (this.isBitOne(i, interestedPieces)) {
+                poolOfRandomFilePieceIndecies.add(i);
             }
         }
-
         int randomSelection = ThreadLocalRandom.current().nextInt(0, poolOfRandomFilePieceIndecies.size());
         System.out.println("tw total interested pieces " + poolOfRandomFilePieceIndecies.size());
         return poolOfRandomFilePieceIndecies.get(randomSelection);
