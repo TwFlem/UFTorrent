@@ -43,7 +43,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
     //message type 2: interested
     private Message handleInterested() {
         //TODO: Test. probably dont send a message back?
-        eventLogger.receiveInteresedMsg(this.otherPeerId);
+        eventLogger.receiveInteresedMsg(Integer.toString(otherPeerId));
         serverConnectionHandlers.get(otherPeerId).isInterestedInMe = true;
 
         return new Message((byte)0x1);
@@ -51,7 +51,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
     //message type 3: uninterested
     private Message handleUninterested() {
         //TODO: Test. probably don't send a message back?
-        eventLogger.receiveNotInterestedMsg(this.otherPeerId);
+        eventLogger.receiveNotInterestedMsg(Integer.toString(otherPeerId));
         serverConnectionHandlers.get(otherPeerId).isInterestedInMe = false;
         return new Message((byte)0x2);
     }
@@ -60,7 +60,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
     private Message handleHave(byte[] receivedPayload)
     {
         int pieceIndex = (receivedPayload[0] << 24) | (receivedPayload[1]  << 16) | (receivedPayload[2]  << 8) | (receivedPayload[3]);
-        eventLogger.receivedHaveMsg(this.otherPeerId, pieceIndex);
+        eventLogger.receivedHaveMsg(Integer.toString(otherPeerId), Integer.toString(pieceIndex));
         //Update other peers bitfield with this info
         serverConnectionHandlers.get(otherPeerId).otherPeersBitfield = util.setBit1(pieceIndex,serverConnectionHandlers.get(otherPeerId).otherPeersBitfield );
         //now find that piece in my bitfield and see if I already have it. If I do, send not interested message. If i dont, send an interested message.
@@ -123,11 +123,11 @@ public class UFTorrentServerProtocol extends PeerProcess {
         bitfield = util.setBit1(pieceIndex, bitfield); //TODO: Test this and make sure it sets properly
         //log it
         int pieceCount = util.numberOfOnes(bitfield);
-        eventLogger.downloadedPiece(this.otherPeerId,pieceIndex, pieceCount);
+        eventLogger.downloadedPiece(Integer.toString(otherPeerId),Integer.toString(pieceIndex), pieceCount);
         //if I have all the pieces, then I should update my status and log it
         if (Arrays.equals(fullBitfield, bitfield))
         {
-            eventLogger.downloadComplete(this.otherPeerId);
+            eventLogger.downloadComplete(Integer.toString(otherPeerId));
         }
         //respond with a request message for a new piece
         // randomally select a new piece to request
