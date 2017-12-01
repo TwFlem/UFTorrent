@@ -18,12 +18,14 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
     private InputStream bytesIn;
     private OutputStream bytesOut;
     public boolean isInterestedInOtherPeer;
+    public boolean isDone;
     public boolean isChoked;
     public Thread connectionThread;
     public byte[] possiblePieces; //The bitfield representing pieces I don't have that the other peer does
     public byte[] otherPeersBitfield;
     private EventLogger eventLogger = new EventLogger();
     public ClientConnectionHandler(String hostName, int port) {
+        this.isDone = false;
         Exception cantConnect = new Exception();
         while (cantConnect != null)
             try {
@@ -41,6 +43,7 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
             }
             handOut.println(handshakeMessage);
             this.otherPeerId = waitForHandshake();
+            eventLogger.logTCPConnectionTo(this.otherPeerId);
         clientConnectionHandlers.put(otherPeerId, this);
         System.out.println("ClientConnectionHandler for " + this.otherPeerId);
     }
@@ -64,7 +67,6 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
                 System.out.println("Handshake Received From Server: " + fromServer);
                 if (fromServer.substring(0, 18).equals("P2PFILESHARINGPROJ")) {
                     String otherPeerId = fromServer.substring(fromServer.length() - 4);
-                    eventLogger.logTCPConnectionFrom(otherPeerId);
                     return Integer.parseInt(otherPeerId);
                 }
             }
@@ -77,6 +79,11 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
     private void startAsking() {
         UFTorrentClientProtocol protocol = new UFTorrentClientProtocol(this.otherPeerId);
         while (true) {
+
+            if (this.isDone) {
+                break;
+            }
+
             byte[] sizeHeaderFromServer = new byte[4];
             byte[] msgType = new byte[1];
             int bytesRead;

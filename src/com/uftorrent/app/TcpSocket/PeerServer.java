@@ -9,7 +9,6 @@ import java.util.concurrent.TimeUnit;
 
 public class PeerServer extends PeerProcess implements Runnable {
     public void run() {
-        System.out.println("Hello from a server thread!");
         try {
                 ServerSocket serverSocket = new ServerSocket(portNumber);
                 for (Integer otherPeerId : peerInfo.getPeerIds()) {

@@ -2,14 +2,17 @@ package com.uftorrent.app.TcpSocket;
 
 import com.uftorrent.app.main.PeerProcess;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 public class PeerClient extends PeerProcess implements Runnable {
 
     private EventLogger eventLogger = new EventLogger();
     public void run() {
+        if (Arrays.equals(bitfield, fullBitfield)) {
+            return;
+        }
         try {
-            System.out.println("Hello from a client thread!");
             for (int newPeerId : peerInfo.getPeerIds()) {
                 if(newPeerId == peerId) {
                     continue;

@@ -35,7 +35,8 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
         this.otherPeerId = waitForHandshake();
         serverConnectionHandlers.put(this.otherPeerId, this);
         System.out.println("ServerConnectionHandler for peer " + otherPeerId);
-        this.handOut.println(handshakeMessage);
+        this.handOut.println("server " + peerId + " received handshake " + handshakeMessage);
+        eventLogger.logTCPConnectionFrom(this.otherPeerId);
     }
     public void run() {
         try {
@@ -90,7 +91,6 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
                 System.out.println("Handshake Received From Client: " + fromClient);
                 if (fromClient.substring(0, 18).equals("P2PFILESHARINGPROJ")) {
                     String otherPeerId = fromClient.substring(fromClient.length() - 4);
-                    eventLogger.logTCPConnectionFrom(otherPeerId);
                     return Integer.parseInt(otherPeerId);
                 }
             }
