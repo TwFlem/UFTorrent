@@ -38,7 +38,6 @@ public class PeerProcess {
     protected static FilePiece[] pieces; //keep track of what File pieces I have
     protected static Util util = new Util();
     public static void main(String[] args) {
-        clearOldProcessData(); //Deletes log files and peer downloaded files.
         initPeer(args); //Sets package variables regarding this peer.
         //Will make jUnit tests one day
         System.out.println("Here's our env variables!");
@@ -118,6 +117,17 @@ public class PeerProcess {
                 bitfield = emptyBitfield;
             }
 
+            try {
+                String logPattern = "log_peer_" + Integer.toString(peerId) + "log";
+                String directoryPattern = "peer_" + Integer.toString(peerId);
+                util.recursiveDelete(new File(logPattern));
+                util.recursiveDelete(new File(directoryPattern));
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                System.err.println("Error: Can't delete old process data.");
+            }
+
             // Create downloading Directory
             File downloadDir = new File("peer_" + peerId);
             System.out.println("creating directory: " + downloadDir.getName());
@@ -148,25 +158,6 @@ public class PeerProcess {
         }
     }
 
-    private static void clearOldProcessData() {
-        try {
-            final Pattern logPattern = Pattern.compile("log_peer_\\d{4}\\.log");
-            final Pattern directoryPattern = Pattern.compile("peer_\\d{4}");
-            File folder = new File(workingDir);
-            File[] listOfFiles = folder.listFiles();
-
-            for (File file : listOfFiles) {
-                if (logPattern.matcher(file.getName()).matches()
-                        || directoryPattern.matcher(file.getName()).matches()) {
-                    util.recursiveDelete(file);
-                }
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Error: Can't delete old process data.");
-        }
-    }
     //This method will read a file into an appropriate number of FilePieces, and return an array of these pieces
     private static FilePiece[] readFileIntoPiece(String fileName, int pieceSize) {
         try {

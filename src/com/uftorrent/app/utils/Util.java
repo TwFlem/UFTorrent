@@ -166,10 +166,6 @@ public class Util {
         System.out.print("\n");
     }
     public void printBytesAsString(byte[] m) {
-        for (int i = 0; i < m.length; i++) {
-            System.out.printf("0x%x ", m[i]);
-        }
-        System.out.print("\n");
         System.out.println("byte array: " + new String(m));
     }
 }

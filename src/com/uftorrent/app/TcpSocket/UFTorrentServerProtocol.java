@@ -92,10 +92,8 @@ public class UFTorrentServerProtocol extends PeerProcess {
     private Message handleRequest(byte[] receivedPayload) {
         int pieceIndex = util.returnPieceIndex(receivedPayload);
         System.out.println("server " + peerId + " handling request for file piece index " + pieceIndex + " for " + this.otherPeerId);
-        FilePiece returnPiece = pieces[pieceIndex];
-        byte[] returnPayload = returnPiece.getFilePiece();
-        util.printBytesAsString(receivedPayload);
-        return new Message(1 + returnPayload.length, (byte)0x7, returnPayload);
+        util.printBytesAsString(pieces[pieceIndex].getFilePiece());
+        return new Message(1 + pieces[pieceIndex].getFilePiece().length, (byte)0x7, pieces[pieceIndex].getFilePiece());
     }
     //message type 7: piece
     private Message handlePiece(byte[] receivedPayload)
