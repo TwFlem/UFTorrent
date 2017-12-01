@@ -80,7 +80,7 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
                 System.out.println("Handshake Received From Client: " + fromClient);
                 if (fromClient.substring(0, 18).equals("P2PFILESHARINGPROJ")) {
                     String otherPeerId = fromClient.substring(fromClient.length() - 4);
-                    eventLogger.logTCPConnectionFrom(otherPeerId);
+                    eventLogger.logTCPConnectionFrom(Integer.parseInt(otherPeerId));
                     return Integer.parseInt(otherPeerId);
                 }
             }

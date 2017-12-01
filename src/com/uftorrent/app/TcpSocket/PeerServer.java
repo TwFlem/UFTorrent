@@ -9,6 +9,8 @@ import java.util.concurrent.TimeUnit;
 
 
 public class PeerServer extends PeerProcess implements Runnable {
+
+    private EventLogger eventLogger = new EventLogger();
     public void run() {
         System.out.println("Hello from a server thread!");
         try {
@@ -18,10 +20,11 @@ public class PeerServer extends PeerProcess implements Runnable {
                         continue;
                     }
                     Socket clientConnection = serverSocket.accept();
+                    eventLogger.logTCPConnectionTo(otherPeerId);
                     ServerConnectionHandler newConnection = new ServerConnectionHandler(clientConnection);
                     Thread newConnectionThread = new Thread(newConnection);
                     newConnection.connectionThread = newConnectionThread;
-                    newConnectionThread.run();
+                    newConnectionThread.start();
                 }
             } catch(Exception e) {
                 System.out.print("Whoops! The Server quit unexpectedly!\n" + e + "\n");

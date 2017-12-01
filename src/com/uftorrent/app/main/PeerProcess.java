@@ -34,7 +34,7 @@ public class PeerProcess {
     protected static String downloadFilePath;
     protected static byte[] bitfield;
     protected static byte[] fullBitfield;
-    protected static byte[] emptyBitfiled;
+    protected static byte[] emptyBitfield;
     protected static HashMap<Integer, ClientConnectionHandler> clientConnectionHandlers = new HashMap<>();
     protected static HashMap<Integer, ServerConnectionHandler> serverConnectionHandlers = new HashMap<>();
     protected static FilePiece[] pieces; //keep track of what File pieces I have
@@ -46,7 +46,7 @@ public class PeerProcess {
         System.out.println("Here's our env variables!");
         commonVars.print();
         //testing for reading file
-        System.out.println("Heres the file reader in action!");
+        System.out.println("Here's the file reader in action!");
 
         if (hasCompleteFile) {
             FilePiece[] filePieces = readFileIntoPiece("test.txt", (int) commonVars.getPieceSize());
@@ -100,7 +100,7 @@ public class PeerProcess {
             int sizeOfBitfield = commonVars.getNumberOfPieces()/8 + 1;
             int numOfBitsForLastPiece = commonVars.getNumberOfPieces() - (sizeOfBitfield - 1) * 8;
             bitfield = new byte[sizeOfBitfield];
-            emptyBitfiled = new byte[sizeOfBitfield];
+            emptyBitfield = new byte[sizeOfBitfield];
             fullBitfield = new byte[sizeOfBitfield];
             pieces = new FilePiece[commonVars.getNumberOfPieces()];
             System.out.println("Size of bitfield: " + bitfield.length);
@@ -120,7 +120,7 @@ public class PeerProcess {
                 fullBitfield[i] = -1;
             }
 
-            for (int i = 0; i < emptyBitfiled.length; i++) {
+            for (int i = 0; i < emptyBitfield.length; i++) {
                 fullBitfield[i] = 0x00;
             }
 
