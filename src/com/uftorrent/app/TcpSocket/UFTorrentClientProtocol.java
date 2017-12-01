@@ -150,8 +150,9 @@ public class UFTorrentClientProtocol extends PeerProcess {
         //update the bitfield
         bitfield = util.setBit1(pieceIndex, bitfield); //TODO: Test this and make sure it sets properly
         //log it
-        int pieceCount = util.numberOfOnes(bitfield);
+        //update my piece count
         util.setBit0(pieceIndex, clientConnectionHandlers.get(otherPeerId).possiblePieces);
+        int pieceCount = util.numberOfOnes(bitfield);
         System.out.println("tw updated interested after receiving " + pieceIndex);
         util.printBitfieldAsBinaryString(clientConnectionHandlers.get(otherPeerId).possiblePieces);
         eventLogger.downloadedPiece(Integer.toString(otherPeerId),Integer.toString(pieceIndex), pieceCount);
