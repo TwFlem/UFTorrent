@@ -1,19 +1,12 @@
 package com.uftorrent.app.utils;
 
-
 import com.uftorrent.app.protocols.FilePiece;
-import com.uftorrent.app.protocols.Message;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.concurrent.ThreadLocalRandom;
-
-import static java.lang.System.exit;
 
 public class Util {
     // Calculate the size from a byte array

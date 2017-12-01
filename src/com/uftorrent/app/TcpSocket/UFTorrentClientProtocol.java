@@ -18,7 +18,6 @@ public class UFTorrentClientProtocol extends PeerProcess {
         clientConnectionHandlers.get(this.otherPeerId);
     }
     public Message handleInput(byte msgType, byte[] recievedPayload) {
-        byte[] strippedPayload;
         switch(msgType) {
             case 0x0:
                 return handleChoke();
@@ -182,15 +181,6 @@ public class UFTorrentClientProtocol extends PeerProcess {
         newRequest = util.randomSelection(possiblePieces);
         byte[] bytesOfNewIndex = util.intToByteArray(newRequest);
         return new Message(4 + bytesOfNewIndex.length, (byte)0x6, bytesOfNewIndex);
-    }
-    private byte[] payloadFromInput(byte[] input) {
-        byte[] payload = new byte[input.length - 5];
-        for (int i = 5; i < input.length; i++) {
-            payload[i-5] = input[i];
-            System.out.print(payload[i-5] + " ");
-        }
-        System.out.println("Returned Payload length" + payload.length);
-        return payload;
     }
 }
 

@@ -2,9 +2,6 @@ package com.uftorrent.app.TcpSocket;
 
 
 import com.uftorrent.app.main.PeerProcess;
-import com.uftorrent.app.protocols.Message;
-
-import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Set;

@@ -8,7 +8,6 @@ import com.uftorrent.app.setup.env.CommonVars;
 import java.util.Arrays;
 
 public class UFTorrentServerProtocol extends PeerProcess {
-    private String handlingType;
     private int otherPeerId;
     private EventLogger eventLogger = new EventLogger();
     private Util util = new Util();
@@ -16,7 +15,6 @@ public class UFTorrentServerProtocol extends PeerProcess {
         this.otherPeerId = otherPeerId;
     }
     public Message handleInput(byte msgType, byte[] recievedPayload) {
-        byte[] strippedPayload;
         switch(msgType) {
             case 0x0:
                 break;
@@ -151,15 +149,5 @@ public class UFTorrentServerProtocol extends PeerProcess {
         newRequest = util.randomSelection(possiblePieces);
         byte[] bytesOfNewIndex = util.intToByteArray(newRequest);
         return new Message(4 + bytesOfNewIndex.length, (byte)0x6, bytesOfNewIndex);
-    }
-    // Return the payload of a message
-    private byte[] payloadFromInput(byte[] input) {
-        byte[] payload = new byte[input.length - 5];
-        for (int i = 5; i < input.length; i++) {
-            payload[i-5] = input[i];
-            System.out.print(payload[i-5] + " ");
-        }
-        System.out.println("Returned Payload length" + payload.length);
-        return payload;
     }
 }
