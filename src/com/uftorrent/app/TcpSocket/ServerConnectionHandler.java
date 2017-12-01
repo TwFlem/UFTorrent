@@ -2,10 +2,8 @@ package com.uftorrent.app.TcpSocket;
 
 import com.uftorrent.app.main.PeerProcess;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.net.Socket;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 public class ServerConnectionHandler extends PeerProcess implements Runnable {
     private int otherPeerId;
@@ -14,8 +12,9 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
     private BufferedReader handIn;
     private InputStream bytesIn;
     private OutputStream bytesOut;
-    public boolean isChokingTheOtherPeer;
-    public boolean isNotInteresting;
+    public boolean isChokingClient;
+    public boolean isInterestedInMe;
+    public boolean noLongerNeedsToServe;
     public byte[] otherPeersBitfield;
     public byte[] possiblePieces;
     public Thread connectionThread;
@@ -24,10 +23,12 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
     public ServerConnectionHandler(Socket clientConnection) {
         try {
             this.clientConnection = clientConnection;
+            this.isChokingClient = true;
             handOut = new PrintWriter(this.clientConnection.getOutputStream(), true);
             handIn = new BufferedReader(new InputStreamReader(this.clientConnection.getInputStream()));
             bytesIn = this.clientConnection.getInputStream();
             bytesOut = this.clientConnection.getOutputStream();
+            this.noLongerNeedsToServe = false;
         } catch (Exception e) {
             System.out.println("Unable to establish a sever connection handler");
         }
@@ -52,10 +53,16 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
             int bytesRead;
             try {
                 bytesIn.read(sizeHeaderFromClient, 0, 4);
-                int messageSize = util.packetSize(sizeHeaderFromClient);
+                int messageSize = util.byteArrayToInt(sizeHeaderFromClient);
                 System.out.println("Size of message From Client: " + messageSize);
 
-                if (clientConnection.isClosed() || Arrays.equals(fullBitfield, this.otherPeersBitfield) || messageSize == 0) {
+                util.sleep(1);
+                if (messageSize == 0) {
+                    System.out.println("serverConnectionHandler " + peerId + " Waiting on " + this.otherPeerId);
+                    continue;
+                }
+
+                if (Arrays.equals(fullBitfield, this.otherPeersBitfield)) {
                     clientConnection.close();
                     System.out.println(this.otherPeerId + " client has complete file, " + peerId + " sever thread is ending");
                     break;
@@ -68,7 +75,9 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
                 bytesRead = bytesIn.read(msgBody, 0, msgBody.length);
                 System.out.println("# of payload bytes read from client: " + bytesRead);
 
-                bytesOut.write(protocol.handleInput(msgType[0], msgBody).msgToByteArray());
+                byte[] msg = protocol.handleInput(msgType[0], msgBody).msgToByteArray();
+                util.printMsg(msg, peerId, this.otherPeerId, "server", "client");
+                bytesOut.write(msg);
             } catch(Exception e) {
                 System.out.println("Server ConnectionHandler " + this.otherPeerId + " closed\n" + e + "\n");
             }

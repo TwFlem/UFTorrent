@@ -8,10 +8,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.Socket;
-import java.sql.Time;
-import java.util.concurrent.TimeUnit;
-
-import static java.lang.System.exit;
 
 public class ClientConnectionHandler extends PeerProcess implements Runnable {
     private int otherPeerId;
@@ -87,10 +83,16 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
 
             try {
                 bytesIn.read(sizeHeaderFromServer, 0, 4);
-                int messageSize = util.packetSize(sizeHeaderFromServer);
+                int messageSize = util.byteArrayToInt(sizeHeaderFromServer);
                 System.out.println("Size of message From Server: " + messageSize);
 
-                if (hasCompleteFile || messageSize == 0) {
+                util.sleep(1);
+                if (messageSize == 0) {
+                    System.out.println("clientConnectionHandler " + peerId + " Waiting on " + this.otherPeerId);
+                    continue;
+                }
+
+                if (peerInfo.getHasCompleteFile(peerId)) {
                     socketToPeer.close();
                     System.out.println(peerId + " client has complete file, closing connection to " + this.otherPeerId + " server");
                     break;
@@ -103,7 +105,9 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
                 bytesRead = bytesIn.read(msgBody, 0, msgBody.length);
                 System.out.println("# of payload bytes read from server: " + bytesRead);
 
-                bytesOut.write(protocol.handleInput(msgType[0], msgBody).msgToByteArray());
+                byte[] msg = protocol.handleInput(msgType[0], msgBody).msgToByteArray();
+                util.printMsg(msg, peerId, this.otherPeerId, "client", "server");
+                bytesOut.write(msg);
             } catch (Exception e) {
                 System.out.println("Problem Reading from Server " + this.otherPeerId + "\n" + e + "\n");
             }

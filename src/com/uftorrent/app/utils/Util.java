@@ -1,6 +1,8 @@
 package com.uftorrent.app.utils;
 
 import com.uftorrent.app.protocols.FilePiece;
+import com.uftorrent.app.protocols.Message;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -54,19 +56,12 @@ public class Util {
             file.delete();
         }
     }
-    public int packetSize(byte[] arr) {
+    public int byteArrayToInt(byte[] arr) {
         ByteBuffer wrapped = ByteBuffer.wrap(arr);
         return wrapped.getInt();
     }
     public byte[] intToByteArray(int i) {
         return ByteBuffer.allocate(4).putInt(i).array();
-    }
-    public byte[] getCompleteBitfield(int size) {
-        byte[] completeBitField = new byte[size];
-        for(int i = 0; i < completeBitField.length; i++) {
-            completeBitField[i] = 127;
-        }
-        return completeBitField;
     }
     //get a piece index from the first four bytes, given the payload (ALREADY STRIPPED OF HEADER INFO)
     public int returnPieceIndex(byte[] receivedPayload)
@@ -157,5 +152,24 @@ public class Util {
         } catch (Exception e) {
 
         }
+    }
+    public void printMsg(byte[] m, int src, int dest, String srcType, String destType) {
+
+        System.out.println("msg source: " + srcType + " " + src);
+        System.out.println("msg dest: " + destType + " " + dest);
+        System.out.print("msg as byte array: ");
+
+        for (int i = 0; i < m.length; i++) {
+            System.out.printf("0x%x ", m[i]);
+        }
+
+        System.out.print("\n");
+    }
+    public void printBytesAsString(byte[] m) {
+        for (int i = 0; i < m.length; i++) {
+            System.out.printf("0x%x ", m[i]);
+        }
+        System.out.print("\n");
+        System.out.println("byte array: " + new String(m));
     }
 }

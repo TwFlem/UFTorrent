@@ -44,14 +44,15 @@ public class UFTorrentServerProtocol extends PeerProcess {
     private Message handleInterested() {
         //TODO: Test. probably dont send a message back?
         eventLogger.receiveInteresedMsg(Integer.toString(otherPeerId));
-        serverConnectionHandlers.get(otherPeerId).isNotInteresting = false;
-        return new Message((byte)0x2);
+        serverConnectionHandlers.get(otherPeerId).isInterestedInMe = true;
+
+        return new Message((byte)0x1);
     }
     //message type 3: uninterested
     private Message handleUninterested() {
         //TODO: Test. probably don't send a message back?
         eventLogger.receiveNotInterestedMsg(Integer.toString(otherPeerId));
-        serverConnectionHandlers.get(otherPeerId).isNotInteresting = true;
+        serverConnectionHandlers.get(otherPeerId).isInterestedInMe = false;
         return new Message((byte)0x2);
     }
     //message type 4: Have
@@ -79,51 +80,28 @@ public class UFTorrentServerProtocol extends PeerProcess {
     private Message handleBitField(byte[] recievedBitfield) {
         //TODO: Test.
         System.out.println("Server Actually handleing a bitfield");
-        byte[] emptyBitfield = new byte[bitfield.length];
-        byte[] completeBitField = util.getCompleteBitfield(bitfield.length);
-        //If the other peer has a completed bitfield, handle it
-        if (Arrays.equals(completeBitField, recievedBitfield)) {
-            peerInfo.setHasCompleteFile(otherPeerId, true);
+        serverConnectionHandlers.get(this.otherPeerId).otherPeersBitfield = recievedBitfield;
+        if (Arrays.equals(fullBitfield, recievedBitfield)) {
+            peerInfo.setHasCompleteFile(this.otherPeerId, true);
+            serverConnectionHandlers.get(this.otherPeerId).noLongerNeedsToServe = true;
         }
-        //empty bitfield? Not interested
-        if (Arrays.equals(emptyBitfield, recievedBitfield)) {
-            return new Message((byte)0x3);
-        }
-        byte[] interestedBitfield = new byte[bitfield.length];
-        for (int i = 0; i < recievedBitfield.length; i++)
-        {
-            //bit operations to find what Server has that this client doesn't
-            int currentByte = (int)recievedBitfield[i];
-            int currentClientByte = (int)bitfield[i];
-            currentClientByte = ~currentClientByte;
-            int interestedByte = currentClientByte & currentByte;
-            interestedBitfield[i] = (byte)interestedByte;
-        }
-        //store the interested bitfield for later reference
-        serverConnectionHandlers.get(otherPeerId).otherPeersBitfield = recievedBitfield;
-        serverConnectionHandlers.get(otherPeerId).possiblePieces = interestedBitfield;
-        //no files interested in, send a not interested message
-        if (Arrays.equals(emptyBitfield, interestedBitfield))
-        {
-            return new Message((byte)0x3);
-        }
-        //otherwise, send an interested message to let the other peer know I'm interested in its pieces.
-        return new Message((byte)0x2);
+        return new Message(1 + bitfield.length, (byte)0x05, bitfield);
     }
     //message type 6: request
     //should be mostly correct
     private Message handleRequest(byte[] receivedPayload) {
         int pieceIndex = util.returnPieceIndex(receivedPayload);
+        System.out.println("server " + peerId + " handling request for file piece index " + pieceIndex + " for " + this.otherPeerId);
         FilePiece returnPiece = pieces[pieceIndex];
         byte[] returnPayload = returnPiece.getFilePiece();
-        return new Message(1 + pieceIndex, (byte)0x7, returnPayload);
+        util.printBytesAsString(receivedPayload);
+        return new Message(1 + returnPayload.length, (byte)0x7, returnPayload);
     }
     //message type 7: piece
     private Message handlePiece(byte[] receivedPayload)
     {
         //get a piece with the first 4 bytes as the index. Save it in my piece array, update my bitfield, and continue
         int pieceIndex = util.returnPieceIndex(receivedPayload);
-        byte[] completeBitField = util.getCompleteBitfield(bitfield.length);
         FilePiece newPiece = new FilePiece(new byte[(int)commonVars.getPieceSize()], pieceIndex);
         //write the bytes into a file piece
         for (int i = 4; i < receivedPayload.length; i++)
@@ -138,7 +116,7 @@ public class UFTorrentServerProtocol extends PeerProcess {
         int pieceCount = util.numberOfOnes(bitfield);
         eventLogger.downloadedPiece(Integer.toString(otherPeerId),Integer.toString(pieceIndex), pieceCount);
         //if I have all the pieces, then I should update my status and log it
-        if (Arrays.equals(completeBitField, bitfield))
+        if (Arrays.equals(fullBitfield, bitfield))
         {
             eventLogger.downloadComplete(Integer.toString(otherPeerId));
         }

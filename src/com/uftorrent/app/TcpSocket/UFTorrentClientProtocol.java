@@ -99,9 +99,8 @@ public class UFTorrentClientProtocol extends PeerProcess {
         //TODO: Test.
         System.out.println("Client Actually handleing a bitfield");
         byte[] emptyBitfield = new byte[bitfield.length];
-        byte[] completeBitField = util.getCompleteBitfield(bitfield.length);
         //If the other peer has a completed bitfield, handle it
-        if (Arrays.equals(completeBitField, recievedBitfield)) {
+        if (Arrays.equals(fullBitfield, recievedBitfield)) {
             peerInfo.setHasCompleteFile(otherPeerId, true);
         }
         //empty bitfield? Not interested
@@ -146,7 +145,6 @@ public class UFTorrentClientProtocol extends PeerProcess {
     {
         //get a piece with the first 4 bytes as the index. Save it in my piece array, update my bitfield, and continue
         int pieceIndex = util.returnPieceIndex(receivedPayload);
-        byte[] completeBitField = util.getCompleteBitfield(bitfield.length);
         byte[] emptyBitfield = new byte[bitfield.length];
         FilePiece newPiece = new FilePiece(new byte[(int)commonVars.getPieceSize()], pieceIndex);
         //write the bytes into a file piece
@@ -162,7 +160,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
         int pieceCount = util.numberOfOnes(bitfield);
         eventLogger.downloadedPiece(Integer.toString(otherPeerId),Integer.toString(pieceIndex), pieceCount);
         //if I have all the pieces, then I should update my status and log it
-        if (Arrays.equals(completeBitField, bitfield))
+        if (Arrays.equals(fullBitfield, bitfield))
         {
             eventLogger.downloadComplete(Integer.toString(otherPeerId));
             for (int i = 0; i < bitfield.length; i++)

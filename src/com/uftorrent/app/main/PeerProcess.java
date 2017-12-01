@@ -28,7 +28,6 @@ public class PeerProcess {
     protected static int peerId;
     protected static String hostName;
     protected static int portNumber;
-    protected static boolean hasCompleteFile;
     protected static String handshakeMessage = "P2PFILESHARINGPROJ0000000000";
     protected static String downloadFilePath;
     protected static byte[] bitfield;
@@ -47,7 +46,7 @@ public class PeerProcess {
         //testing for reading file
         System.out.println("Heres the file reader in action!");
 
-        if (hasCompleteFile) {
+        if (peerInfo.getHasCompleteFile(peerId)) {
             FilePiece[] filePieces = readFileIntoPiece("test.txt", (int) commonVars.getPieceSize());
             pieces = filePieces;
             for (int i = 0; i < filePieces.length; i++) {
@@ -60,7 +59,7 @@ public class PeerProcess {
         //Display this peer's info
         System.out.println("Here's this Peer's Info!");
         System.out.format("ID: %s HostName: %s, PortNumber: %s, HasCompleteFile: %s%n",
-                peerId, hostName, portNumber, hasCompleteFile);
+                peerId, hostName, portNumber, peerInfo.getHasCompleteFile(peerId));
 
 
         // Start the Server thread
@@ -95,32 +94,28 @@ public class PeerProcess {
             handshakeMessage = handshakeMessage + peerId;
             hostName = peerInfo.getHostName(peerId);
             portNumber = peerInfo.getPortNumber(peerId);
-            hasCompleteFile = peerInfo.getHasCompleteFile(peerId);
-            int sizeOfBitfield = commonVars.getNumberOfPieces();
-            int numOfBitsForLastPiece = commonVars.getNumberOfPieces() - (sizeOfBitfield - 1) * 8;
+            int sizeOfBitfield = (commonVars.getNumberOfPieces() / 8) + 1;
+            int remainderbits = commonVars.getNumberOfPieces() % 8;
             bitfield = new byte[sizeOfBitfield];
             emptyBitfield = new byte[sizeOfBitfield];
             fullBitfield = new byte[sizeOfBitfield];
             pieces = new FilePiece[commonVars.getNumberOfPieces()];
             System.out.println("Size of bitfield: " + bitfield.length);
+            System.out.println("last chunk to bits: " + util.intToBigEndianBitChunk(remainderbits));
 
-            if (hasCompleteFile) {
-               for (int i = 0; i < bitfield.length - 1; i++) {
-                   bitfield[i] = -1;
-               }
-               bitfield[bitfield.length -1] = util.intToBigEndianBitChunk(numOfBitsForLastPiece);
-            } else {
-                for (int i = 0; i < bitfield.length - 1; i++) {
-                    bitfield[i] = 0x00;
-                }
-            }
-
-            for (int i = 0; i < bitfield.length; i++) {
-                fullBitfield[i] = -1;
-            }
+           for (int i = 0; i < fullBitfield.length - 1; i++) {
+               fullBitfield[i] = -1;
+           }
+           fullBitfield[fullBitfield.length - 1] = util.intToBigEndianBitChunk(remainderbits);
 
             for (int i = 0; i < emptyBitfield.length; i++) {
-                fullBitfield[i] = 0x00;
+                emptyBitfield[i] = 0x00;
+            }
+
+            if (peerInfo.getHasCompleteFile(peerId)) {
+                bitfield = fullBitfield;
+            } else {
+                bitfield = emptyBitfield;
             }
 
             // Create downloading Directory
