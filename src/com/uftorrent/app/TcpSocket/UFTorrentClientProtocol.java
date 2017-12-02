@@ -26,7 +26,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
             case 0x3:
                 return handleUninterested();
             case 0x4:
-                break;
+                return handleHave(recievedPayload);
             case 0x5:
                 return handleBitField(recievedPayload);
             case 0x6:
@@ -44,7 +44,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
         //TODO: Is this fine for choking? This probably shouldn't actually return a message at all, maybe implement a -1 return message?.
         eventLogger.chokeNeighbor(otherPeerId);
         clientConnectionHandlers.get(otherPeerId).isChoked = true;
-        return new Message((byte)0x0);
+        return new Message((byte)0x8);
     }
     //Message type 1: unchoke
     private Message handleUnchoke() {
@@ -60,14 +60,14 @@ public class UFTorrentClientProtocol extends PeerProcess {
         //TODO: Test. probably dont send a message back?
         eventLogger.receiveInterestedMsg(otherPeerId);
         clientConnectionHandlers.get(otherPeerId).isInterested = true;
-        return new Message((byte)0x2);
+        return new Message((byte)0x8);
     }
     //message type 3: uninterested
     private Message handleUninterested() {
         //TODO: Test. probably don't send a message back?
         eventLogger.receiveNotInterestedMsg(otherPeerId);
         clientConnectionHandlers.get(otherPeerId).isInterested = true;
-        return new Message((byte)0x2);
+        return new Message((byte)0x8);
     }
     //message type 4: Have
     //handle a have message, this should be complete
@@ -76,24 +76,23 @@ public class UFTorrentClientProtocol extends PeerProcess {
     {
         int pieceIndex = (receivedPayload[0] << 24) | (receivedPayload[1]  << 16) | (receivedPayload[2]  << 8) | (receivedPayload[3]);
         eventLogger.receivedHaveMsg(otherPeerId, pieceIndex);
+        serverConnectionHandlers.get(otherPeerId).otherPeersBitfield = util.setBit1(pieceIndex, serverConnectionHandlers.get(otherPeerId).otherPeersBitfield);
+        serverConnectionHandlers.get(otherPeerId).possiblePieces = util.getInterestedBitfield(bitfield, serverConnectionHandlers.get(otherPeerId).otherPeersBitfield);
         //Update other peers bitfield with this info
         //now find that piece in my bitfield and see if I already have it. If I do, send not interested message. If i dont, send an interested message.
-        boolean isOne = util.isBitOne(pieceIndex, bitfield);
-        if (isOne)
+       int numOfOnes = util.numberOfOnes(serverConnectionHandlers.get(otherPeerId).possiblePieces);
+        if (numOfOnes > 0)
         {
-            //I already have the piece, so I ain't interested
-            return new Message((byte)0x3);
+            return new Message((byte)0x2);
         }
         else
         {
-            //I don't have the piece, so send an interested message
-            return new Message((byte)0x2);
+            return new Message((byte)0x3);
         }
     }
     // Message type 5: bitfield
     private Message handleBitField(byte[] recievedBitfield) {
         //TODO: Test.
-        System.out.println("Client Actually handleing a bitfield");
         byte[] emptyBitfield = new byte[bitfield.length];
         //If the other peer has a completed bitfield, handle it
         if (Arrays.equals(fullBitfield, recievedBitfield)) {
@@ -103,16 +102,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
         if (Arrays.equals(emptyBitfield, recievedBitfield)) {
             return new Message((byte)0x3);
         }
-        byte[] interestedBitfield = new byte[bitfield.length];
-        for (int i = 0; i < recievedBitfield.length; i++)
-        {
-            //bit operations to find what Server has that this client doesn't
-            int currentByte = (int)recievedBitfield[i];
-            int currentClientByte = (int)bitfield[i];
-            currentClientByte = ~currentClientByte;
-            int interestedByte = currentClientByte & currentByte;
-            interestedBitfield[i] = (byte)interestedByte;
-        }
+        byte[] interestedBitfield = util.getInterestedBitfield(bitfield, recievedBitfield);
         //store the interested bitfield for later reference
         clientConnectionHandlers.get(otherPeerId).otherPeersBitfield = recievedBitfield;
         clientConnectionHandlers.get(otherPeerId).possiblePieces = interestedBitfield;
@@ -142,10 +132,10 @@ public class UFTorrentClientProtocol extends PeerProcess {
         }
         //store the file piece
         pieces[pieceIndex] = newPiece;
-
-//        for(clientConnectionHandlers.get(p))
-
-        //update the bitfield
+        for (Integer connectionKey : serverConnectionHandlers.keySet()) {
+            //update the bitfield
+            serverConnectionHandlers.get(connectionKey).sendHaveMessage(pieceIndex);
+        }
         bitfield = util.setBit1(pieceIndex, bitfield); //TODO: Test this and make sure it sets properly
         //log it
         //update my piece count

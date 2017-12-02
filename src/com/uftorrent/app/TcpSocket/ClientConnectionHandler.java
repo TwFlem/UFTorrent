@@ -109,7 +109,11 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
 
                 byte[] msg = protocol.handleInput(msgType[0], msgBody).msgToByteArray();
                 util.printMsg(msg, peerId, this.otherPeerId, "client", "server");
-                this.bytesOut.write(msg);
+                if (msgType[0] == 0x8) {
+                    System.out.println("blank msg client " + peerId);
+                } else {
+                    this.bytesOut.write(msg);
+                }
             } catch (Exception e) {
                 System.out.println("Problem Reading from Server " + this.otherPeerId + "\n" + e + "\n");
             }

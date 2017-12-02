@@ -8,7 +8,7 @@ import java.net.Socket;
 import java.util.Arrays;
 
 public class ServerConnectionHandler extends PeerProcess implements Runnable {
-    private int otherPeerId;
+    public int otherPeerId;
     private Socket clientConnection;
     private PrintWriter handOut;
     private BufferedReader handIn;
@@ -91,7 +91,11 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
 
                 byte[] msg = protocol.handleInput(msgType[0], msgBody).msgToByteArray();
                 util.printMsg(msg, peerId, this.otherPeerId, "server", "client");
-                bytesOut.write(msg);
+                if (msgType[0] == 0x8) {
+                    System.out.println("blank msg sent to server " + peerId);
+                } else {
+                    bytesOut.write(msg);
+                }
             } catch(Exception e) {
                 System.out.println("Server ConnectionHandler " + this.otherPeerId + " closed\n" + e + "\n");
             }
@@ -117,9 +121,25 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
 
     public void choke() {
         isChokingClient = true;
+        try {
+            Message chokeMsg = new Message((byte)0x0);
+            util.printMsg(chokeMsg.msgToByteArray(), peerId, this.otherPeerId, "server", "client");
+            this.bytesOut.write(chokeMsg.msgToByteArray());
+        }
+        catch (Exception e) {
+            System.out.println("Problem sending a choke message " + this.otherPeerId + "\n" + e + "\n");
+        }
     }
     public void unchoke() {
         isChokingClient = false;
+        try {
+            Message chokeMsg = new Message((byte)0x1);
+            util.printMsg(chokeMsg.msgToByteArray(), peerId, this.otherPeerId, "server", "client");
+            this.bytesOut.write(chokeMsg.msgToByteArray());
+        }
+        catch (Exception e) {
+            System.out.println("Problem sending a unchoke message " + this.otherPeerId + "\n" + e + "\n");
+        }
     }
     public void sendHaveMessage(int pieceIndex)
     {

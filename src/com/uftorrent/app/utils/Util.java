@@ -189,4 +189,17 @@ public class Util {
         }
         System.out.println();
     }
+    public byte[] getInterestedBitfield(byte[] bitfield, byte[] recievedBitfield) {
+        byte[] interestedBitfield = new byte[bitfield.length];
+        for (int i = 0; i < recievedBitfield.length; i++)
+        {
+            //bit operations to find what Server has that this client doesn't
+            int currentByte = (int)recievedBitfield[i];
+            int currentClientByte = (int)bitfield[i];
+            currentClientByte = ~currentClientByte;
+            int interestedByte = currentClientByte & currentByte;
+            interestedBitfield[i] = (byte)interestedByte;
+        }
+        return  interestedBitfield;
+    }
 }

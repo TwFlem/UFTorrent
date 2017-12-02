@@ -52,10 +52,11 @@ public class PeerServer extends PeerProcess implements Runnable {
                     }
                 }
                 Random rand = new Random();
-                int n = rand.nextInt(chokedNeighbors.size());
-                ServerConnectionHandler optimistic = chokedNeighbors.elementAt(n);
-                optimistic.unchoke();
-                optimistic.connectionThread.resume();
+                if (chokedNeighbors.size() > 0) {
+                    int n = Math.abs(rand.nextInt(chokedNeighbors.size()));
+                    chokedNeighbors.elementAt(n).unchoke();
+                    eventLogger.optimisticallyUnchockedNeighbor(chokedNeighbors.elementAt(n).otherPeerId);
+                }
             }
         };
         TimerTask taskChoking = new TimerTask() {
@@ -74,10 +75,12 @@ public class PeerServer extends PeerProcess implements Runnable {
                 Collections.sort(rates);
 
                 String listOfPrefNeighbors = "";
-                if (Arrays.equals(fullBitfield, bitfield)) {
+                int[] logN = new int[(int)commonVars.getNumberOfPrefferedNeighbors()];
+                if (!Arrays.equals(fullBitfield, bitfield)) {
                     for (int j = 0; j < commonVars.getNumberOfPrefferedNeighbors(); j++) {
                         preferredNeighbors.addElement(rates.elementAt(j));
                         listOfPrefNeighbors += rates.elementAt(j).peerId + " ";
+                        logN[j] = rates.elementAt(j).peerId;
                     }
                 } else {
                     Random rand = new Random();
@@ -85,33 +88,25 @@ public class PeerServer extends PeerProcess implements Runnable {
                         int randomIndex = rand.nextInt(rates.size());
                         preferredNeighbors.addElement(rates.elementAt(randomIndex));
                         listOfPrefNeighbors += rates.elementAt(randomIndex).peerId + " ";
+                        logN[j] = rates.elementAt(randomIndex).peerId;
                         rates.remove(randomIndex);
                     }
                 }
                 System.out.println("List of Preferred Neighbors: " + listOfPrefNeighbors);
+                eventLogger.changePreferedNeighbor(logN);
 
                 boolean unchokedNeighbor = false;
                 for (Integer otherPeerId : serverConnectionHandlers.keySet()) {
-                    ServerConnectionHandler otherConnection = serverConnectionHandlers.get(otherPeerId);
                     for (int i = 0; i < preferredNeighbors.size(); i++) {
-                        ServerConnectionHandler prefConnection = serverConnectionHandlers.get(preferredNeighbors.elementAt(i).peerId);
-                        if (prefConnection == otherConnection) {
-                            otherConnection.unchoke();
-                            otherConnection.connectionThread.resume();
+                        if (serverConnectionHandlers.get(preferredNeighbors.elementAt(i).peerId) == serverConnectionHandlers.get(otherPeerId)) {
+                            serverConnectionHandlers.get(otherPeerId).unchoke();
 
                             System.out.println("Unchoked PeerId: " + preferredNeighbors.elementAt(i).peerId);
                             unchokedNeighbor = true;
                         }
                     }
                     if (!unchokedNeighbor) {
-                        otherConnection.choke();
-                        try {
-                            otherConnection.connectionThread.suspend();
-                        }
-                        catch (Exception e) {
-                            System.out.println("suspend thread didn't work?");
-                        }
-                        System.out.println("Unchoked PeerId: " + otherPeerId);
+                        serverConnectionHandlers.get(otherPeerId).choke();
                     }
                 }
             }
