@@ -18,9 +18,8 @@ public class PeerServer extends PeerProcess implements Runnable {
                     }
                     Socket clientConnection = serverSocket.accept();
                     ServerConnectionHandler newConnection = new ServerConnectionHandler(clientConnection);
-                    Thread newConnectionThread = new Thread(newConnection);
-                    newConnection.connectionThread = newConnectionThread;
-                    newConnectionThread.run();
+                    newConnection.connectionThread = new Thread(newConnection);
+                    newConnection.connectionThread.start();
                 }
             } catch(Exception e) {
                 System.out.print("Whoops! The Server quit unexpectedly!\n" + e + "\n");

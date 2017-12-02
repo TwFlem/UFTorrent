@@ -32,13 +32,15 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
         } catch (Exception e) {
             System.out.println("Unable to establish a sever connection handler");
         }
-        this.otherPeerId = waitForHandshake();
-        serverConnectionHandlers.put(this.otherPeerId, this);
-        System.out.println("ServerConnectionHandler for peer " + otherPeerId);
-        this.handOut.println(handshakeMessage);
     }
     public void run() {
         try {
+            System.out.println("Server connection handler " + peerId + " started");
+            this.otherPeerId = waitForHandshake();
+            serverConnectionHandlers.put(this.otherPeerId, this);
+            System.out.println("ServerConnectionHandler for peer " + otherPeerId);
+            this.handOut.println(handshakeMessage);
+
             startListening();
 
         } catch (Exception e) {
