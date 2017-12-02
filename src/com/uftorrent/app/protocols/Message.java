@@ -27,7 +27,7 @@ public class Message extends PeerProcess {
         if (messageType == DATA_CHOKE || messageType == DATA_UNCHOKE ||
                 messageType == DATA_INTERESTED || messageType == DATA_UNINTERESTED || messageType == 0x8)
         {
-            this.messageLength = 0;
+            this.messageLength = 1;
             this.data = new byte[0];
         }
         else
