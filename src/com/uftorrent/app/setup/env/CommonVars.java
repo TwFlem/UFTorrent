@@ -8,7 +8,7 @@ import java.io.BufferedReader;
 
 public class CommonVars {
     private long numberOfPrefferedNeighbors;
-    private double optomisticUnchokingInterval;
+    private double optimisticUnchokingInterval;
     private long pieceSize;
     private String fileName;
     private double unchokingInterval;
@@ -44,7 +44,7 @@ public class CommonVars {
 
     private void setFields(Map<String, String> envVars) {
         this.numberOfPrefferedNeighbors = Long.parseLong(envVars.get("NumberOfPreferredNeighbors"));
-        this.optomisticUnchokingInterval = Double.parseDouble(envVars.get("OptomisticUnchokingInterval"));
+        this.optimisticUnchokingInterval = Double.parseDouble(envVars.get("OptimisticUnchokingInterval"));
         this.pieceSize = Long.parseLong(envVars.get("PieceSize"));
         this.fileName = envVars.get("FileName");
         this.unchokingInterval = Double.parseDouble(envVars.get("UnchokingInterval"));
@@ -54,7 +54,7 @@ public class CommonVars {
     }
     public void print() {
         System.out.println("numberOfPrefferedNeighbors " + this.numberOfPrefferedNeighbors );
-        System.out.println("optomisticUnchokingInterval " + this.optomisticUnchokingInterval );
+        System.out.println("optomisticUnchokingInterval " + this.optimisticUnchokingInterval );
         System.out.println("pieceSize " + this.pieceSize );
         System.out.println("fileName " + this.fileName );
         System.out.println("unchokingInterval " + this.unchokingInterval );
@@ -67,8 +67,8 @@ public class CommonVars {
         return numberOfPrefferedNeighbors;
     }
 
-    public double getOptomisticUnchokingInterval() {
-        return optomisticUnchokingInterval;
+    public double getOptimisticUnchokingInterval() {
+        return optimisticUnchokingInterval;
     }
 
     public long getPieceSize() {
