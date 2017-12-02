@@ -14,7 +14,8 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
     private OutputStream bytesOut;
 
     public boolean isPreferred;
-    public boolean isChokingTheOtherPeer;
+    //public boolean isChokingTheOtherPeer;
+    public int totalBytesRead;
     public double downloadRate;
     public boolean isNotInteresting;
 
@@ -29,6 +30,7 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
 
     public ServerConnectionHandler(Socket clientConnection) {
         try {
+            this.totalBytesRead = 0;
             this.clientConnection = clientConnection;
             this.isChokingClient = true;
             handOut = new PrintWriter(this.clientConnection.getOutputStream(), true);
@@ -70,6 +72,7 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
                     System.out.println("serverConnectionHandler " + peerId + " Waiting on " + this.otherPeerId);
                     continue;
                 }
+                this.totalBytesRead += messageSize;
 
                 if (Arrays.equals(fullBitfield, this.otherPeersBitfield)) {
                     clientConnection.close();
@@ -111,9 +114,9 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
     }
 
     public void choke() {
-        isChokingTheOtherPeer = true;
+        isChokingClient = true;
     }
     public void unchoke() {
-        isChokingTheOtherPeer = false;
+        isChokingClient = false;
     }
 }
