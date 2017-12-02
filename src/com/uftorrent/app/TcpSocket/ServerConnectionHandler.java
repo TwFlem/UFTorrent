@@ -1,6 +1,8 @@
 package com.uftorrent.app.TcpSocket;
 
 import com.uftorrent.app.main.PeerProcess;
+import com.uftorrent.app.protocols.Message;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.Arrays;
@@ -83,7 +85,6 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
                 byte[] msgBody = new byte[messageSize - 1];
                 bytesRead = bytesIn.read(msgBody, 0, msgBody.length);
                 System.out.println("# of payload bytes read from client: " + bytesRead);
-
                 byte[] msg = protocol.handleInput(msgType[0], msgBody).msgToByteArray();
                 util.printMsg(msg, peerId, this.otherPeerId, "server", "client");
                 bytesOut.write(msg);

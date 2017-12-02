@@ -61,18 +61,20 @@ public class UFTorrentServerProtocol extends PeerProcess {
         int pieceIndex = (receivedPayload[0] << 24) | (receivedPayload[1]  << 16) | (receivedPayload[2]  << 8) | (receivedPayload[3]);
         eventLogger.receivedHaveMsg(otherPeerId, pieceIndex);
         //Update other peers bitfield with this info
-        serverConnectionHandlers.get(otherPeerId).otherPeersBitfield = util.setBit1(pieceIndex,serverConnectionHandlers.get(otherPeerId).otherPeersBitfield );
+        serverConnectionHandlers.get(otherPeerId).otherPeersBitfield = util.setBit1(pieceIndex,serverConnectionHandlers.get(otherPeerId).otherPeersBitfield);
+        //update your clients possiblePieces to reflect this new info
+        clientConnectionHandlers.get(otherPeerId).possiblePieces = util.recalcInterested(bitfield, serverConnectionHandlers.get(otherPeerId).otherPeersBitfield);
         //now find that piece in my bitfield and see if I already have it. If I do, send not interested message. If i dont, send an interested message.
-        boolean isOne = util.isBitOne(pieceIndex, bitfield);
-        if (isOne)
+        int numOnes = util.numberOfOnes(clientConnectionHandlers.get(otherPeerId).possiblePieces);
+        if (numOnes > 0)
         {
-            //I already have the piece, so I ain't interested
-            return new Message((byte)0x3);
+            //I'm interested, you have a piece I don't
+            return new Message((byte)0x2);
         }
         else
         {
-            //I don't have the piece, so send an interested message
-            return new Message((byte)0x2);
+            //I'm not interested, you don't have any pieces I don't
+            return new Message((byte)0x3);
         }
     }
     // Message type 5: bitfield

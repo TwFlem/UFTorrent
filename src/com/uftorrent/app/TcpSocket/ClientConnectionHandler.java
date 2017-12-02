@@ -117,4 +117,18 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
         }
 
     }
+    public void sendHaveMessage(int pieceIndex)
+    {
+        try {
+            Message haveMessage = new Message((byte) 0x5, (byte) 0x4, util.intToByteArray(pieceIndex));
+            System.out.println("Sending a have message of length: " + haveMessage.getLength());
+            byte[] msg2 = haveMessage.msgToByteArray();
+            util.printMsg(msg2, peerId, this.otherPeerId, "client", "server");
+            this.bytesOut.write(msg2);
+        }
+        catch (Exception e) {
+            System.out.println("Problem sending a have message " + this.otherPeerId + "\n" + e + "\n");
+        }
+
+    }
 }

@@ -189,4 +189,19 @@ public class Util {
         }
         System.out.println();
     }
+    //recalculate the interested bitfield. myBitfield should be mine, the new one should be whatever i need to compare against
+    public byte[] recalcInterested(byte[] myBitfield, byte[] newBitfield)
+    {
+        byte[] interestedBitfield = new byte[myBitfield.length];
+        for (int i = 0; i < newBitfield.length; i++)
+        {
+            //bit operations to find what Server has that this client doesn't
+            int currentByte = (int)newBitfield[i];
+            int currentClientByte = (int)myBitfield[i];
+            currentClientByte = ~currentClientByte;
+            int interestedByte = currentClientByte & currentByte;
+            interestedBitfield[i] = (byte)interestedByte;
+        }
+        return interestedBitfield;
+    }
 }
