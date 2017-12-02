@@ -9,7 +9,6 @@ import com.uftorrent.app.exceptions.InvalidPeerID;
 import com.uftorrent.app.setup.env.PeerInfo;
 import com.uftorrent.app.utils.Util;
 import com.uftorrent.app.protocols.FilePiece;
-import com.uftorrent.app.protocols.Message;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -29,7 +28,6 @@ public class PeerProcess {
     protected static int peerId;
     protected static String hostName;
     protected static int portNumber;
-    protected static boolean hasCompleteFile;
     protected static String handshakeMessage = "P2PFILESHARINGPROJ0000000000";
     protected static String downloadFilePath;
     protected static byte[] bitfield;
@@ -40,7 +38,6 @@ public class PeerProcess {
     protected static FilePiece[] pieces; //keep track of what File pieces I have
     protected static Util util = new Util();
     public static void main(String[] args) {
-        clearOldProcessData(); //Deletes log files and peer downloaded files.
         initPeer(args); //Sets package variables regarding this peer.
         //Will make jUnit tests one day
         System.out.println("Here's our env variables!");
@@ -48,8 +45,8 @@ public class PeerProcess {
         //testing for reading file
         System.out.println("Here's the file reader in action!");
 
-        if (hasCompleteFile) {
-            FilePiece[] filePieces = readFileIntoPiece("test.txt", (int) commonVars.getPieceSize());
+        if (peerInfo.getHasCompleteFile(peerId)) {
+            FilePiece[] filePieces = readFileIntoPiece(commonVars.getFileName(), (int) commonVars.getPieceSize());
             pieces = filePieces;
             for (int i = 0; i < filePieces.length; i++) {
                 writeFilePiece(downloadFilePath, filePieces[i]);
@@ -61,7 +58,7 @@ public class PeerProcess {
         //Display this peer's info
         System.out.println("Here's this Peer's Info!");
         System.out.format("ID: %s HostName: %s, PortNumber: %s, HasCompleteFile: %s%n",
-                peerId, hostName, portNumber, hasCompleteFile);
+                peerId, hostName, portNumber, peerInfo.getHasCompleteFile(peerId));
 
 
         // Start the Server thread
@@ -96,32 +93,39 @@ public class PeerProcess {
             handshakeMessage = handshakeMessage + peerId;
             hostName = peerInfo.getHostName(peerId);
             portNumber = peerInfo.getPortNumber(peerId);
-            hasCompleteFile = peerInfo.getHasCompleteFile(peerId);
-            int sizeOfBitfield = commonVars.getNumberOfPieces()/8 + 1;
-            int numOfBitsForLastPiece = commonVars.getNumberOfPieces() - (sizeOfBitfield - 1) * 8;
+            int sizeOfBitfield = (commonVars.getNumberOfPieces() / 8) + 1;
+            int remainderbits = commonVars.getNumberOfPieces() % 8;
             bitfield = new byte[sizeOfBitfield];
             emptyBitfield = new byte[sizeOfBitfield];
             fullBitfield = new byte[sizeOfBitfield];
             pieces = new FilePiece[commonVars.getNumberOfPieces()];
             System.out.println("Size of bitfield: " + bitfield.length);
+            System.out.println("last chunk to bits: " + util.intToBigEndianBitChunk(remainderbits));
 
-            if (hasCompleteFile) {
-               for (int i = 0; i < bitfield.length - 1; i++) {
-                   bitfield[i] = -1;
-               }
-               bitfield[bitfield.length -1] = util.intToBigEndianBitChunk(numOfBitsForLastPiece);
-            } else {
-                for (int i = 0; i < bitfield.length - 1; i++) {
-                    bitfield[i] = 0x00;
-                }
-            }
-
-            for (int i = 0; i < bitfield.length; i++) {
-                fullBitfield[i] = -1;
-            }
+           for (int i = 0; i < fullBitfield.length - 1; i++) {
+               fullBitfield[i] = -1;
+           }
+           fullBitfield[fullBitfield.length - 1] = util.intToBigEndianBitChunk(remainderbits);
 
             for (int i = 0; i < emptyBitfield.length; i++) {
-                fullBitfield[i] = 0x00;
+                emptyBitfield[i] = 0x00;
+            }
+
+            if (peerInfo.getHasCompleteFile(peerId)) {
+                bitfield = fullBitfield;
+            } else {
+                bitfield = emptyBitfield;
+            }
+
+            try {
+                String logPattern = "log_peer_" + Integer.toString(peerId) + "log";
+                String directoryPattern = "peer_" + Integer.toString(peerId);
+                util.recursiveDelete(new File(logPattern));
+                util.recursiveDelete(new File(directoryPattern));
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                System.err.println("Error: Can't delete old process data.");
             }
 
             // Create downloading Directory
@@ -154,25 +158,6 @@ public class PeerProcess {
         }
     }
 
-    private static void clearOldProcessData() {
-        try {
-            final Pattern logPattern = Pattern.compile("log_peer_\\d{4}\\.log");
-            final Pattern directoryPattern = Pattern.compile("peer_\\d{4}");
-            File folder = new File(workingDir);
-            File[] listOfFiles = folder.listFiles();
-
-            for (File file : listOfFiles) {
-                if (logPattern.matcher(file.getName()).matches()
-                        || directoryPattern.matcher(file.getName()).matches()) {
-                    util.recursiveDelete(file);
-                }
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Error: Can't delete old process data.");
-        }
-    }
     //This method will read a file into an appropriate number of FilePieces, and return an array of these pieces
     private static FilePiece[] readFileIntoPiece(String fileName, int pieceSize) {
         try {
@@ -182,12 +167,12 @@ public class PeerProcess {
             int newStartIndex;
             for (int i = 0; i < pieceArray.length - 1; i++) {
                 newStartIndex = i * pieceSize;
-                pieceArray[i] = new FilePiece(Arrays.copyOfRange(data, newStartIndex, newStartIndex + pieceSize), pieceSize);
+                pieceArray[i] = new FilePiece(Arrays.copyOfRange(data, newStartIndex, newStartIndex + pieceSize), i);
             }
             int lastPieceIndex = pieceArray.length - 1;
             int lastPieceStartIndex = lastPieceIndex * pieceSize;
             pieceArray[lastPieceIndex] =
-                    new FilePiece(Arrays.copyOfRange(data, lastPieceStartIndex, lastPieceStartIndex + pieceSize), pieceSize);
+                    new FilePiece(Arrays.copyOfRange(data, lastPieceStartIndex, lastPieceStartIndex + pieceSize), pieceArray.length - 1);
             return pieceArray;
         }
 
