@@ -2,6 +2,7 @@ package com.uftorrent.app.utils;
 
 import com.uftorrent.app.protocols.FilePiece;
 import com.uftorrent.app.protocols.Message;
+import com.uftorrent.app.setup.env.CommonVars;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -9,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
@@ -188,5 +190,24 @@ public class Util {
             System.out.print(Integer.toBinaryString(b) + " ");
         }
         System.out.println();
+    }
+    public byte[] getInterestedBitfield(byte[] bitfield, byte[] recievedBitfield) {
+        byte[] interestedBitfield = new byte[bitfield.length];
+        for (int i = 0; i < recievedBitfield.length; i++)
+        {
+            //bit operations to find what Server has that this client doesn't
+            int currentByte = (int)recievedBitfield[i];
+            int currentClientByte = (int)bitfield[i];
+            currentClientByte = ~currentClientByte;
+            int interestedByte = currentClientByte & currentByte;
+            interestedBitfield[i] = (byte)interestedByte;
+        }
+        return  interestedBitfield;
+    }
+    public void writeFile(CommonVars cv, FilePiece[] fp, byte[] bf) {
+        for (int i = 0; i < bf.length; i++)
+        {
+            this.writeFilePiece(cv.getFileName(), fp[i]); //TODO: test this and make sure the filename is right
+        }
     }
 }

@@ -2,12 +2,14 @@ package com.uftorrent.app.TcpSocket;
 
 import com.uftorrent.app.main.PeerProcess;
 import com.uftorrent.app.protocols.Message;
+import com.uftorrent.app.setup.env.CommonVars;
 
 import java.io.DataInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.Socket;
+import java.util.Arrays;
 
 public class ClientConnectionHandler extends PeerProcess implements Runnable {
     private int otherPeerId;
@@ -94,9 +96,12 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
                     continue;
                 }
 
-                if (peerInfo.getHasCompleteFile(peerId)) {
-                    socketToPeer.close();
-                    System.out.println(peerId + " client has complete file, closing connection to " + this.otherPeerId + " server");
+                if (Arrays.equals(bitfield, fullBitfield)) {
+                    util.writeFile(commonVars, pieces, bitfield);
+                    this.bytesOut.write((new Message((byte)0x9)).msgToByteArray());
+                    clientConnectionHandlers.remove(this.otherPeerId);
+                    this.socketToPeer.close();
+                    System.out.println("blank msg client " + peerId);
                     break;
                 }
 
@@ -106,6 +111,11 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
                 byte[] msgBody = new byte[messageSize - 1];
                 bytesRead = bytesIn.read(msgBody, 0, msgBody.length);
                 System.out.println("# of payload bytes read from server: " + bytesRead);
+
+                if (msgType[0] == 0x8) {
+                    System.out.println("blank msg client " + peerId);
+                    continue;
+                }
 
                 byte[] msg = protocol.handleInput(msgType[0], msgBody).msgToByteArray();
                 util.printMsg(msg, peerId, this.otherPeerId, "client", "server");
