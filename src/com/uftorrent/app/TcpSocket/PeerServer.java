@@ -4,8 +4,13 @@ package com.uftorrent.app.TcpSocket;
 import com.uftorrent.app.main.PeerProcess;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.*;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
+import java.util.Vector;
+import java.util.Collections;
+import java.util.Random;
 
 
 public class PeerServer extends PeerProcess implements Runnable {
@@ -74,19 +79,9 @@ public class PeerServer extends PeerProcess implements Runnable {
                 Collections.sort(rates);
 
                 String listOfPrefNeighbors = "";
-                if (Arrays.equals(fullBitfield, bitfield)) {
-                    for (int j = 0; j < commonVars.getNumberOfPrefferedNeighbors(); j++) {
-                        preferredNeighbors.addElement(rates.elementAt(j));
-                        listOfPrefNeighbors += rates.elementAt(j).peerId + " ";
-                    }
-                } else {
-                    Random rand = new Random();
-                    for (int j = 0; j < commonVars.getNumberOfPrefferedNeighbors(); j++) {
-                        int randomIndex = rand.nextInt(rates.size());
-                        preferredNeighbors.addElement(rates.elementAt(randomIndex));
-                        listOfPrefNeighbors += rates.elementAt(randomIndex).peerId + " ";
-                        rates.remove(randomIndex);
-                    }
+                for (int j = 0; j < commonVars.getNumberOfPrefferedNeighbors(); j++) {
+                    preferredNeighbors.addElement(rates.elementAt(j));
+                    listOfPrefNeighbors += rates.elementAt(j).peerId + " ";
                 }
                 System.out.println("List of Preferred Neighbors: " + listOfPrefNeighbors);
 
