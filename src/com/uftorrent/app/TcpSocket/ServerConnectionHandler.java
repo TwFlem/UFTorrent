@@ -1,8 +1,6 @@
 package com.uftorrent.app.TcpSocket;
 
 import com.uftorrent.app.main.PeerProcess;
-import com.uftorrent.app.protocols.Message;
-
 import java.io.*;
 import java.net.Socket;
 import java.util.Arrays;
@@ -120,19 +118,5 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
     }
     public void unchoke() {
         isChokingClient = false;
-    }
-    public void sendHaveMessage(int pieceIndex)
-    {
-        try {
-            Message haveMessage = new Message((byte) 0x5, (byte) 0x4, util.intToByteArray(pieceIndex));
-            System.out.println("Sending a have message of length: " + haveMessage.getLength());
-            byte[] msg2 = haveMessage.msgToByteArray();
-            util.printMsg(msg2, peerId, this.otherPeerId, "server", "client");
-            this.bytesOut.write(msg2);
-        }
-        catch (Exception e) {
-            System.out.println("Problem sending a have message " + this.otherPeerId + "\n" + e + "\n");
-        }
-
     }
 }
