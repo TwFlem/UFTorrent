@@ -12,9 +12,16 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
     private BufferedReader handIn;
     private InputStream bytesIn;
     private OutputStream bytesOut;
+
+    public boolean isPreferred;
+    public boolean isChokingTheOtherPeer;
+    public double downloadRate;
+    public boolean isNotInteresting;
+
     public boolean isChokingClient;
     public boolean isInterestedInMe;
     public boolean noLongerNeedsToServe;
+
     public byte[] otherPeersBitfield;
     public byte[] possiblePieces;
     public Thread connectionThread;
@@ -92,7 +99,7 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
                 System.out.println("Handshake Received From Client: " + fromClient);
                 if (fromClient.substring(0, 18).equals("P2PFILESHARINGPROJ")) {
                     String otherPeerId = fromClient.substring(fromClient.length() - 4);
-                    eventLogger.logTCPConnectionFrom(otherPeerId);
+                    eventLogger.logTCPConnectionFrom(Integer.parseInt(otherPeerId));
                     return Integer.parseInt(otherPeerId);
                 }
             }
@@ -101,5 +108,12 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
             System.out.print("Whoops! Server unexpectedly quit!\n" + e.getMessage());
         }
         return 0;
+    }
+
+    public void choke() {
+        isChokingTheOtherPeer = true;
+    }
+    public void unchoke() {
+        isChokingTheOtherPeer = false;
     }
 }

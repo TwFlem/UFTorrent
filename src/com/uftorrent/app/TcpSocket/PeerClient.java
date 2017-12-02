@@ -15,7 +15,7 @@ public class PeerClient extends PeerProcess implements Runnable {
                         peerInfo.getPortNumber(newPeerId)
                 );
                 newConnection.connectionThread = new Thread(newConnection);
-                newConnection.connectionThread.run();
+                newConnection.connectionThread.start();
             }
         }
         catch(Exception e) {

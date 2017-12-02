@@ -43,7 +43,7 @@ public class PeerProcess {
         System.out.println("Here's our env variables!");
         commonVars.print();
         //testing for reading file
-        System.out.println("Heres the file reader in action!");
+        System.out.println("Here's the file reader in action!");
 
         if (peerInfo.getHasCompleteFile(peerId)) {
             FilePiece[] filePieces = readFileIntoPiece(commonVars.getFileName(), (int) commonVars.getPieceSize());
