@@ -92,7 +92,6 @@ public class UFTorrentClientProtocol extends PeerProcess {
     // Message type 5: bitfield
     private Message handleBitField(byte[] recievedBitfield) {
         //TODO: Test.
-        System.out.println("Client Actually handleing a bitfield");
         byte[] emptyBitfield = new byte[bitfield.length];
         //If the other peer has a completed bitfield, handle it
         if (Arrays.equals(fullBitfield, recievedBitfield)) {

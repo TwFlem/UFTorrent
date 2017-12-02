@@ -65,7 +65,7 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
             try {
                 bytesIn.read(sizeHeaderFromClient, 0, 4);
                 int messageSize = util.byteArrayToInt(sizeHeaderFromClient);
-                System.out.println("Size of message From Client: " + messageSize);
+                System.out.println("Size of message From Client " + this.otherPeerId + ": " + messageSize);
 
                 util.sleep(1);
                 if (messageSize == 0) {
@@ -89,8 +89,9 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
                 util.printMsg(msg, peerId, this.otherPeerId, "server", "client");
                 if (msgType[0] == 0x8) {
                     System.out.println("blank message");
+                } else {
+                    this.bytesOut.write(msg);
                 }
-                this.bytesOut.write(msg);
             } catch(Exception e) {
                 System.out.println("Server ConnectionHandler " + this.otherPeerId + " closed\n" + e + "\n");
             }
@@ -126,7 +127,7 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
             Message haveMessage = new Message((byte) 0x5, (byte) 0x4, util.intToByteArray(pieceIndex));
             System.out.println("Sending a have message of length: " + haveMessage.getLength());
             byte[] msg2 = haveMessage.msgToByteArray();
-            util.printMsg(msg2, peerId, this.otherPeerId, "client", "server");
+            util.printMsg(msg2, peerId, this.otherPeerId, "server", "client");
             this.bytesOut.write(msg2);
         }
         catch (Exception e) {
