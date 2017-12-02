@@ -9,7 +9,6 @@ import com.uftorrent.app.exceptions.InvalidPeerID;
 import com.uftorrent.app.setup.env.PeerInfo;
 import com.uftorrent.app.utils.Util;
 import com.uftorrent.app.protocols.FilePiece;
-import com.uftorrent.app.protocols.Message;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -29,27 +28,29 @@ public class PeerProcess {
     protected static int peerId;
     protected static String hostName;
     protected static int portNumber;
-    protected static boolean hasCompleteFile;
     protected static String handshakeMessage = "P2PFILESHARINGPROJ0000000000";
     protected static String downloadFilePath;
     protected static byte[] bitfield;
     protected static byte[] fullBitfield;
-    protected static byte[] emptyBitfiled;
+    protected static byte[] emptyBitfield;
     protected static HashMap<Integer, ClientConnectionHandler> clientConnectionHandlers = new HashMap<>();
     protected static HashMap<Integer, ServerConnectionHandler> serverConnectionHandlers = new HashMap<>();
     protected static FilePiece[] pieces; //keep track of what File pieces I have
     protected static Util util = new Util();
     public static void main(String[] args) {
-        clearOldProcessData(); //Deletes log files and peer downloaded files.
         initPeer(args); //Sets package variables regarding this peer.
         //Will make jUnit tests one day
         System.out.println("Here's our env variables!");
         commonVars.print();
         //testing for reading file
-        System.out.println("Heres the file reader in action!");
-        FilePiece[] filePieces = readFileIntoPiece("Common.cfg", 3);
-        for (int i = 0; i < filePieces.length; i++) {
-            writeFilePiece(downloadFilePath, filePieces[i]);
+        System.out.println("Here's the file reader in action!");
+
+        if (peerInfo.getHasCompleteFile(peerId)) {
+            FilePiece[] filePieces = readFileIntoPiece(commonVars.getFileName(), (int) commonVars.getPieceSize());
+            pieces = filePieces;
+            for (int i = 0; i < filePieces.length; i++) {
+                writeFilePiece(downloadFilePath, filePieces[i]);
+            }
         }
         System.out.println("Here's all Peer Info!");
         peerInfo.print();
@@ -57,7 +58,7 @@ public class PeerProcess {
         //Display this peer's info
         System.out.println("Here's this Peer's Info!");
         System.out.format("ID: %s HostName: %s, PortNumber: %s, HasCompleteFile: %s%n",
-                peerId, hostName, portNumber, hasCompleteFile);
+                peerId, hostName, portNumber, peerInfo.getHasCompleteFile(peerId));
 
 
         // Start the Server thread
@@ -92,32 +93,39 @@ public class PeerProcess {
             handshakeMessage = handshakeMessage + peerId;
             hostName = peerInfo.getHostName(peerId);
             portNumber = peerInfo.getPortNumber(peerId);
-            hasCompleteFile = peerInfo.getHasCompleteFile(peerId);
-            int sizeOfBitfield = commonVars.getNumberOfPieces()/8 + 1;
-            int numOfBitsForLastPiece = commonVars.getNumberOfPieces() - (sizeOfBitfield - 1) * 8;
+            int sizeOfBitfield = (commonVars.getNumberOfPieces() / 8) + 1;
+            int remainderbits = commonVars.getNumberOfPieces() % 8;
             bitfield = new byte[sizeOfBitfield];
-            emptyBitfiled = new byte[sizeOfBitfield];
+            emptyBitfield = new byte[sizeOfBitfield];
             fullBitfield = new byte[sizeOfBitfield];
             pieces = new FilePiece[commonVars.getNumberOfPieces()];
             System.out.println("Size of bitfield: " + bitfield.length);
+            System.out.println("last chunk to bits: " + util.intToBigEndianBitChunk(remainderbits));
 
-            if (hasCompleteFile) {
-               for (int i = 0; i < bitfield.length - 1; i++) {
-                   bitfield[i] = -1;
-               }
-               bitfield[bitfield.length -1] = util.intToBigEndianBitChunk(numOfBitsForLastPiece);
+           for (int i = 0; i < fullBitfield.length - 1; i++) {
+               fullBitfield[i] = -1;
+           }
+           fullBitfield[fullBitfield.length - 1] = util.intToBigEndianBitChunk(remainderbits);
+
+            for (int i = 0; i < emptyBitfield.length; i++) {
+                emptyBitfield[i] = 0x00;
+            }
+
+            if (peerInfo.getHasCompleteFile(peerId)) {
+                bitfield = fullBitfield;
             } else {
-                for (int i = 0; i < bitfield.length - 1; i++) {
-                    bitfield[i] = 0x00;
-                }
+                bitfield = emptyBitfield;
             }
 
-            for (int i = 0; i < bitfield.length; i++) {
-                fullBitfield[i] = -1;
+            try {
+                String logPattern = "log_peer_" + Integer.toString(peerId) + "log";
+                String directoryPattern = "peer_" + Integer.toString(peerId);
+                util.recursiveDelete(new File(logPattern));
+                util.recursiveDelete(new File(directoryPattern));
             }
-
-            for (int i = 0; i < emptyBitfiled.length; i++) {
-                fullBitfield[i] = 0x00;
+            catch (Exception e) {
+                e.printStackTrace();
+                System.err.println("Error: Can't delete old process data.");
             }
 
             // Create downloading Directory
@@ -150,54 +158,21 @@ public class PeerProcess {
         }
     }
 
-    private static void clearOldProcessData() {
-        try {
-            final Pattern logPattern = Pattern.compile("log_peer_\\d{4}\\.log");
-            final Pattern directoryPattern = Pattern.compile("peer_\\d{4}");
-            File folder = new File(workingDir);
-            File[] listOfFiles = folder.listFiles();
-
-            for (File file : listOfFiles) {
-                if (logPattern.matcher(file.getName()).matches()
-                        || directoryPattern.matcher(file.getName()).matches()) {
-                    util.recursiveDelete(file);
-                }
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Error: Can't delete old process data.");
-        }
-    }
     //This method will read a file into an appropriate number of FilePieces, and return an array of these pieces
     private static FilePiece[] readFileIntoPiece(String fileName, int pieceSize) {
         try {
-            // Use this for reading the data.
-            byte[] buffer = new byte[pieceSize];
-            int total = 0;
-            int nRead = 0;
-            int pieceCount = 0;
-            int fileLength = Math.toIntExact(new File(fileName).length());
-            FilePiece[] pieceArray = new FilePiece[fileLength/pieceSize];
+            FilePiece[] pieceArray = new FilePiece[commonVars.getNumberOfPieces()];
             Path path = Paths.get(fileName);
             byte[] data = Files.readAllBytes(path);
-            //Debugging code
-            /*
-            System.out.println("FILE READER INFO HERE");
-            System.out.println(new String(data));
-            */
-            for (int i = 0; i < pieceArray.length; i++) {
-                byte[] section = new byte[pieceSize];
-
-                pieceArray[i] = new FilePiece(Arrays.copyOfRange(data, i*pieceSize, i*3 + pieceSize), pieceSize);
+            int newStartIndex;
+            for (int i = 0; i < pieceArray.length - 1; i++) {
+                newStartIndex = i * pieceSize;
+                pieceArray[i] = new FilePiece(Arrays.copyOfRange(data, newStartIndex, newStartIndex + pieceSize), i);
             }
-            //debugging code
-            /*
-            for (int i = 0; i < pieceArray.length; i++)
-            {
-                System.out.println(new String(pieceArray[i].getFilePiece()));
-            }
-            */
+            int lastPieceIndex = pieceArray.length - 1;
+            int lastPieceStartIndex = lastPieceIndex * pieceSize;
+            pieceArray[lastPieceIndex] =
+                    new FilePiece(Arrays.copyOfRange(data, lastPieceStartIndex, lastPieceStartIndex + pieceSize), pieceArray.length - 1);
             return pieceArray;
         }
 

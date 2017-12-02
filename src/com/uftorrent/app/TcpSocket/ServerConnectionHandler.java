@@ -1,13 +1,9 @@
 package com.uftorrent.app.TcpSocket;
 
 import com.uftorrent.app.main.PeerProcess;
-import com.uftorrent.app.protocols.Message;
-
 import java.io.*;
 import java.net.Socket;
-import java.util.concurrent.TimeUnit;
-
-import static java.lang.System.exit;
+import java.util.Arrays;
 
 public class ServerConnectionHandler extends PeerProcess implements Runnable {
     private int otherPeerId;
@@ -16,29 +12,42 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
     private BufferedReader handIn;
     private InputStream bytesIn;
     private OutputStream bytesOut;
+
+    public boolean isPreferred;
     public boolean isChokingTheOtherPeer;
+    public double downloadRate;
     public boolean isNotInteresting;
-    private byte[] otherPeersBitfield;
+
+    public boolean isChokingClient;
+    public boolean isInterestedInMe;
+    public boolean noLongerNeedsToServe;
+
+    public byte[] otherPeersBitfield;
+    public byte[] possiblePieces;
     public Thread connectionThread;
     private EventLogger eventLogger = new EventLogger();
 
     public ServerConnectionHandler(Socket clientConnection) {
         try {
             this.clientConnection = clientConnection;
+            this.isChokingClient = true;
             handOut = new PrintWriter(this.clientConnection.getOutputStream(), true);
             handIn = new BufferedReader(new InputStreamReader(this.clientConnection.getInputStream()));
             bytesIn = this.clientConnection.getInputStream();
             bytesOut = this.clientConnection.getOutputStream();
+            this.noLongerNeedsToServe = false;
         } catch (Exception e) {
             System.out.println("Unable to establish a sever connection handler");
         }
-        this.otherPeerId = waitForHandshake();
-        serverConnectionHandlers.put(this.otherPeerId, this);
-        System.out.println("ServerConnectionHandler for peer " + otherPeerId);
-        this.handOut.println(handshakeMessage);
     }
     public void run() {
         try {
+            System.out.println("Server connection handler " + peerId + " started");
+            this.otherPeerId = waitForHandshake();
+            serverConnectionHandlers.put(this.otherPeerId, this);
+            System.out.println("ServerConnectionHandler for peer " + otherPeerId);
+            this.handOut.println(handshakeMessage);
+
             startListening();
 
         } catch (Exception e) {
@@ -53,15 +62,20 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
             int bytesRead;
             try {
                 bytesIn.read(sizeHeaderFromClient, 0, 4);
-                int messageSize = util.packetSize(sizeHeaderFromClient);
+                int messageSize = util.byteArrayToInt(sizeHeaderFromClient);
                 System.out.println("Size of message From Client: " + messageSize);
 
-                // ----- Temporary --------
-                if (msgType[0] == 0x05 || messageSize == 0) {
-                    System.out.println("Server ConnectionHandler " + this.otherPeerId + " closed");
+                util.sleep(1);
+                if (messageSize == 0) {
+                    System.out.println("serverConnectionHandler " + peerId + " Waiting on " + this.otherPeerId);
+                    continue;
+                }
+
+                if (Arrays.equals(fullBitfield, this.otherPeersBitfield)) {
+                    clientConnection.close();
+                    System.out.println(this.otherPeerId + " client has complete file, " + peerId + " sever thread is ending");
                     break;
                 }
-                // -------------------------
 
                 bytesIn.read(msgType, 0, 1);
                 System.out.println("Message type of client: " + msgType[0]);
@@ -70,7 +84,9 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
                 bytesRead = bytesIn.read(msgBody, 0, msgBody.length);
                 System.out.println("# of payload bytes read from client: " + bytesRead);
 
-                bytesOut.write(protocol.handleInput(msgType[0], msgBody).msgToByteArray());
+                byte[] msg = protocol.handleInput(msgType[0], msgBody).msgToByteArray();
+                util.printMsg(msg, peerId, this.otherPeerId, "server", "client");
+                bytesOut.write(msg);
             } catch(Exception e) {
                 System.out.println("Server ConnectionHandler " + this.otherPeerId + " closed\n" + e + "\n");
             }
@@ -83,7 +99,7 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
                 System.out.println("Handshake Received From Client: " + fromClient);
                 if (fromClient.substring(0, 18).equals("P2PFILESHARINGPROJ")) {
                     String otherPeerId = fromClient.substring(fromClient.length() - 4);
-                    eventLogger.logTCPConnectionFrom(otherPeerId);
+                    eventLogger.logTCPConnectionFrom(Integer.parseInt(otherPeerId));
                     return Integer.parseInt(otherPeerId);
                 }
             }
@@ -92,5 +108,12 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
             System.out.print("Whoops! Server unexpectedly quit!\n" + e.getMessage());
         }
         return 0;
+    }
+
+    public void choke() {
+        isChokingTheOtherPeer = true;
+    }
+    public void unchoke() {
+        isChokingTheOtherPeer = false;
     }
 }

@@ -1,14 +1,16 @@
 package com.uftorrent.app.utils;
 
+import com.uftorrent.app.protocols.FilePiece;
+import com.uftorrent.app.protocols.Message;
 
 import java.io.File;
-import java.lang.reflect.Array;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-
-import static java.lang.System.exit;
 
 public class Util {
     // Calculate the size from a byte array
@@ -29,7 +31,7 @@ public class Util {
     }
 
     // For logging
-    public String catStringsFromArrayIntoCSV(String[] arrayOfStrings) {
+    public String catStringsFromArrayIntoCSV(int[] arrayOfStrings) {
         String temp = "";
         for (int i =0; i < arrayOfStrings.length; i++) {
             temp = temp + arrayOfStrings[i] + ",";
@@ -55,24 +57,17 @@ public class Util {
             file.delete();
         }
     }
-    public int packetSize(byte[] arr) {
+    public int byteArrayToInt(byte[] arr) {
         ByteBuffer wrapped = ByteBuffer.wrap(arr);
         return wrapped.getInt();
     }
     public byte[] intToByteArray(int i) {
         return ByteBuffer.allocate(4).putInt(i).array();
     }
-    public byte[] getCompleteBitfield(int size) {
-        byte[] completeBitField = new byte[size];
-        for(int i = 0; i < completeBitField.length; i++) {
-            completeBitField[i] = 127;
-        }
-        return completeBitField;
-    }
     //get a piece index from the first four bytes, given the payload (ALREADY STRIPPED OF HEADER INFO)
     public int returnPieceIndex(byte[] receivedPayload)
     {
-        int pieceIndex = -1;;
+        int pieceIndex = -1;
         pieceIndex = (receivedPayload[0] << 24) | (receivedPayload[1]  << 16) | (receivedPayload[2]  << 8) | (receivedPayload[3]);
         return pieceIndex;
     }
@@ -86,10 +81,87 @@ public class Util {
     }
     //function to randomly select a piece from a list of pieces that the Server has that this Client does not
     //maybe I should move this to utils?
-    private int randomSelection(int[] interestedPieces)
+    public int randomSelection(byte[] interestedPieces, int filePieceSize)
     {
-        int randomSelection = ThreadLocalRandom.current().nextInt(0, interestedPieces.length + 1);
-        return randomSelection;
+        ArrayList<Integer> poolOfRandomFilePieceIndecies = new ArrayList<>();
+
+        for (int i = 0; i < filePieceSize; i++) {
+            if (this.isBitOne(i, interestedPieces)) {
+                poolOfRandomFilePieceIndecies.add(i);
+            }
+        }
+        int randomSelection = ThreadLocalRandom.current().nextInt(0, poolOfRandomFilePieceIndecies.size());
+        System.out.println("tw total interested pieces " + poolOfRandomFilePieceIndecies.size());
+        return poolOfRandomFilePieceIndecies.get(randomSelection);
+    }
+    //determines if a bit is one given an integer index of that bit
+    public boolean isBitOne(int index, byte[] bitfield)
+    {
+        int byteIndex = index/8;
+        int offset = index%8;
+        int bitChoice = (int)bitfield[byteIndex] >> 7-offset;
+        //if the bit is a one, return true
+        if ((bitChoice & 1) == 1)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    //TODO: test this
+    //returns the number of one bits in a byte array. For the logging.
+    public int numberOfOnes(byte[] pieces)
+    {
+        int count = 0;
+        for (int i = 0; i < pieces.length * 8; i++)
+        {
+            int byteIndex = i/8;
+            int offset = i%8;
+            int bitChoice = (int)pieces[byteIndex] >> 7-offset;
+            if ((bitChoice & 1) == 1)
+            {
+                count = count + 1;
+            }
+        }
+        return count;
+    }
+    //TODO: test this
+    //set a bit to one given an integer index of that bit
+    public byte[] setBit1(int index, byte[] bitfield)
+    {
+        int byteIndex = index/8;
+        int offset = index%8;
+        bitfield[byteIndex] = (byte)(bitfield[byteIndex] | (1 << 7-offset));
+        return bitfield;
+    }
+
+    public byte[] setBit0(int index, byte[] bitfield)
+    {
+        int byteIndex = index/8;
+        int offset = index%8;
+        bitfield[byteIndex] = (byte)(bitfield[byteIndex] & ~(1 << 7-offset));
+        return bitfield;
+    }
+    //TODO: test this
+    public void writeFilePiece(String fileName, FilePiece piece) {
+        try {
+            byte[] bytes = piece.getFilePiece();
+            FileOutputStream fos = new FileOutputStream(fileName, true);
+            fos.write(bytes);
+            fos.close();
+        }
+        //error catching
+        catch (FileNotFoundException ex) {
+            System.out.println(
+                    "Unable to open file '" +
+                            fileName + "'");
+        } catch (IOException ex) {
+            System.out.println(
+                    "Error reading file '"
+                            + fileName + "'");
+        }
     }
     public void sleep(int timeInSeconds) {
         try {
@@ -97,5 +169,24 @@ public class Util {
         } catch (Exception e) {
 
         }
+    }
+    public void printMsg(byte[] m, int src, int dest, String srcType, String destType) {
+
+        System.out.println("msg source: " + srcType + " " + src);
+        System.out.println("msg dest: " + destType + " " + dest);
+        System.out.print("msg as byte array: ");
+
+        for (int i = 0; i < m.length; i++) {
+            System.out.printf("0x%x ", m[i]);
+        }
+
+        System.out.print("\n");
+    }
+    public void printBitfieldAsBinaryString(byte[] m) {
+
+        for (byte b : m) {
+            System.out.print(Integer.toBinaryString(b) + " ");
+        }
+        System.out.println();
     }
 }

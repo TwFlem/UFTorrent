@@ -4,8 +4,8 @@ import com.uftorrent.app.main.PeerProcess;
 import com.uftorrent.app.protocols.Message;
 import com.uftorrent.app.utils.Util;
 import com.uftorrent.app.protocols.FilePiece;
+
 import java.util.Arrays;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class UFTorrentClientProtocol extends PeerProcess {
     private EventLogger eventLogger = new EventLogger();
@@ -13,9 +13,9 @@ public class UFTorrentClientProtocol extends PeerProcess {
     private Util util = new Util();
     public UFTorrentClientProtocol(int otherPeerId) {
         this.otherPeerId = otherPeerId;
+        clientConnectionHandlers.get(this.otherPeerId);
     }
     public Message handleInput(byte msgType, byte[] recievedPayload) {
-        byte[] strippedPayload;
         switch(msgType) {
             case 0x0:
                 return handleChoke();
@@ -26,11 +26,11 @@ public class UFTorrentClientProtocol extends PeerProcess {
             case 0x3:
                 return handleUninterested();
             case 0x4:
-                return handleHave(recievedPayload);
+                break;
             case 0x5:
                 return handleBitField(recievedPayload);
             case 0x6:
-                return handleRequest(recievedPayload);
+                break;
             case 0x7:
                 return handlePiece(recievedPayload);
             default:
@@ -41,37 +41,45 @@ public class UFTorrentClientProtocol extends PeerProcess {
 
     //Message type 0: choke
     private Message handleChoke() {
-        //TODO: Stop sending to the peer who sent the choke. This probably shouldn't actually return a message at all.
+        //TODO: Is this fine for choking? This probably shouldn't actually return a message at all, maybe implement a -1 return message?.
+        eventLogger.chokeNeighbor(otherPeerId);
+        clientConnectionHandlers.get(otherPeerId).isChoked = true;
         return new Message((byte)0x0);
     }
     //Message type 1: unchoke
     private Message handleUnchoke() {
-        //TODO: Select a piece I don't yet have from the interested bitField, and request it from whoever unchoked me
-        int requestedPiece = 0;
+        //TODO: Test
+        eventLogger.unchokedNeighbor(otherPeerId);
+        clientConnectionHandlers.get(otherPeerId).isChoked = false;
+        int requestedPiece = util.randomSelection(clientConnectionHandlers.get(otherPeerId).possiblePieces, pieces.length);
         byte[] requestedArray = util.intToByteArray(requestedPiece);
         return new Message(5,(byte)0x6, requestedArray);
     }
     //message type 2: interested
     private Message handleInterested() {
-        //TODO: update the list of interested peers, probably dont send a message back?
+        //TODO: Test. probably dont send a message back?
+        eventLogger.receiveInterestedMsg(otherPeerId);
+        clientConnectionHandlers.get(otherPeerId).isInterested = true;
         return new Message((byte)0x2);
     }
     //message type 3: uninterested
     private Message handleUninterested() {
-        //TODO: update the list of interested peers, probably don't send a message back?
+        //TODO: Test. probably don't send a message back?
+        eventLogger.receiveNotInterestedMsg(otherPeerId);
+        clientConnectionHandlers.get(otherPeerId).isInterested = true;
         return new Message((byte)0x2);
     }
     //message type 4: Have
     //handle a have message, this should be complete
+    //TODO: Test this.
     private Message handleHave(byte[] receivedPayload)
     {
         int pieceIndex = (receivedPayload[0] << 24) | (receivedPayload[1]  << 16) | (receivedPayload[2]  << 8) | (receivedPayload[3]);
+        eventLogger.receivedHaveMsg(otherPeerId, pieceIndex);
+        //Update other peers bitfield with this info
         //now find that piece in my bitfield and see if I already have it. If I do, send not interested message. If i dont, send an interested message.
-        int byteIndex = pieceIndex/8;
-        int offset = pieceIndex%8;
-        int bytef = (int)bitfield[byteIndex];
-        int bitChoice = (int)bitfield[byteIndex] >> 7-offset;
-        if ((bitChoice & 1) == 1)
+        boolean isOne = util.isBitOne(pieceIndex, bitfield);
+        if (isOne)
         {
             //I already have the piece, so I ain't interested
             return new Message((byte)0x3);
@@ -84,13 +92,11 @@ public class UFTorrentClientProtocol extends PeerProcess {
     }
     // Message type 5: bitfield
     private Message handleBitField(byte[] recievedBitfield) {
-        //TODO: Store a list of peers with data I'm interested in somewhere
-        //TODO: Actually store a list of the interesting pieces somewhere
-        System.out.println("Actually handleing a bitfield");
+        //TODO: Test.
+        System.out.println("Client Actually handleing a bitfield");
         byte[] emptyBitfield = new byte[bitfield.length];
-        byte[] completeBitField = util.getCompleteBitfield(bitfield.length);
         //If the other peer has a completed bitfield, handle it
-        if (Arrays.equals(completeBitField, recievedBitfield)) {
+        if (Arrays.equals(fullBitfield, recievedBitfield)) {
             peerInfo.setHasCompleteFile(otherPeerId, true);
         }
         //empty bitfield? Not interested
@@ -107,6 +113,9 @@ public class UFTorrentClientProtocol extends PeerProcess {
             int interestedByte = currentClientByte & currentByte;
             interestedBitfield[i] = (byte)interestedByte;
         }
+        //store the interested bitfield for later reference
+        clientConnectionHandlers.get(otherPeerId).otherPeersBitfield = recievedBitfield;
+        clientConnectionHandlers.get(otherPeerId).possiblePieces = interestedBitfield;
         //no files interested in, send a not interested message
         if (Arrays.equals(emptyBitfield, interestedBitfield))
         {
@@ -115,20 +124,16 @@ public class UFTorrentClientProtocol extends PeerProcess {
         //otherwise, send an interested message to let the other peer know I'm interested in its pieces.
         return new Message((byte)0x2);
     }
-    //message type 6: request
-    //should be mostly correct
-    private Message handleRequest(byte[] receivedPayload) {
-        int pieceIndex = util.returnPieceIndex(receivedPayload);
-        // TODO: Just make sure this is how were storing pieces, apart from that, this one should be good to go
-        FilePiece returnPiece = pieces[pieceIndex];
-        byte[] returnPayload = returnPiece.getFilePiece();
-        return new Message(1 + pieceIndex, (byte)0x7, returnPayload);
-    }
     //message type 7: piece
+    //TODO: Test this.
+    //TODO: Blast out have messages after downloading a piece
+    //TODO: Check against all bitfields after receiving piece, to determine if should now send not interested message
     private Message handlePiece(byte[] receivedPayload)
     {
         //get a piece with the first 4 bytes as the index. Save it in my piece array, update my bitfield, and continue
         int pieceIndex = util.returnPieceIndex(receivedPayload);
+        pieceIndex = pieceIndex < 0 ? pieceIndex & 0xff : pieceIndex;
+        byte[] emptyBitfield = new byte[bitfield.length];
         FilePiece newPiece = new FilePiece(new byte[(int)commonVars.getPieceSize()], pieceIndex);
         //write the bytes into a file piece
         for (int i = 4; i < receivedPayload.length; i++)
@@ -137,23 +142,38 @@ public class UFTorrentClientProtocol extends PeerProcess {
         }
         //store the file piece
         pieces[pieceIndex] = newPiece;
+
+//        for(clientConnectionHandlers.get(p))
+
         //update the bitfield
-        int byteIndex = pieceIndex/8;
-        int offset = pieceIndex%8;
-        bitfield[byteIndex] = (byte)(bitfield[byteIndex] | (1 << 7-offset)); //TODO: Test this and make sure it sets properly
-        //respond with a request message for a new piece TODO: Figure out how to determine next piece to request (need list of interested pieces to be stored somewhere
-        int newRequest = 0;
-        byte[] bytesOfNewIndex = util.intToByteArray(newRequest);
-        return new Message(4 + bytesOfNewIndex.length, (byte)0x6, bytesOfNewIndex);
-    }
-    private byte[] payloadFromInput(byte[] input) {
-        byte[] payload = new byte[input.length - 5];
-        for (int i = 5; i < input.length; i++) {
-            payload[i-5] = input[i];
-            System.out.print(payload[i-5] + " ");
+        bitfield = util.setBit1(pieceIndex, bitfield); //TODO: Test this and make sure it sets properly
+        //log it
+        //update my piece count
+        util.setBit0(pieceIndex, clientConnectionHandlers.get(otherPeerId).possiblePieces);
+        int pieceCount = util.numberOfOnes(bitfield);
+        eventLogger.downloadedPiece(otherPeerId, pieceIndex, pieceCount);
+        System.out.println("tw updated interested after receiving " + pieceIndex);
+        util.printBitfieldAsBinaryString(clientConnectionHandlers.get(otherPeerId).possiblePieces);
+        //if I have all the pieces, then I should update my status and log it
+        if (Arrays.equals(fullBitfield, bitfield))
+        {
+            eventLogger.downloadComplete(otherPeerId);
+            for (int i = 0; i < bitfield.length; i++)
+            {
+                util.writeFilePiece(commonVars.getFileName(), pieces[i]); //TODO: test this and make sure the filename is right
+            }
         }
-        System.out.println("Returned Payload length" + payload.length);
-        return payload;
+
+        //respond with a request message for a new piece
+        // randomally select a new piece to request
+        int newRequest = 0;
+        //check to see if there are no possible pieces, if so, send a not interested message
+        if (Arrays.equals(emptyBitfield, clientConnectionHandlers.get(otherPeerId).possiblePieces)) {
+            return new Message((byte)0x3);
+        }
+        newRequest = util.randomSelection(clientConnectionHandlers.get(otherPeerId).possiblePieces, pieces.length);
+        byte[] bytesOfNewIndex = util.intToByteArray(newRequest);
+        return new Message(1 + bytesOfNewIndex.length, (byte)0x6, bytesOfNewIndex);
     }
 }
 

@@ -2,11 +2,7 @@ package com.uftorrent.app.TcpSocket;
 
 import com.uftorrent.app.main.PeerProcess;
 
-import java.util.concurrent.TimeUnit;
-
 public class PeerClient extends PeerProcess implements Runnable {
-
-    private EventLogger eventLogger = new EventLogger();
     public void run() {
         try {
             System.out.println("Hello from a client thread!");
@@ -19,24 +15,12 @@ public class PeerClient extends PeerProcess implements Runnable {
                         peerInfo.getPortNumber(newPeerId)
                 );
                 newConnection.connectionThread = new Thread(newConnection);
-                newConnection.connectionThread.run();
+                newConnection.connectionThread.start();
             }
         }
         catch(Exception e) {
             System.out.print("Whoops! Client unexpectedly quit!\n" + e + "\n");
         }
-
-        System.out.print("Main Client thread has created all connectionHandlers");
-        while(clientConnectionHandlers.keySet().size() < peerInfo.getPeerIds().size() - 1) {
-            try {
-                TimeUnit.SECONDS.sleep(1);
-                System.out.println("Waiting for all handshakes client" + clientConnectionHandlers.keySet().size()
-                        + "/" + (peerInfo.getPeerIds().size() - 1));
-            } catch (Exception e) {
-                System.out.println("Waiting for all client handshakes" + "\n" + e + "\n");
-            }
-        }
-        System.out.print("Main Client thread has shook all hands");
 
         for (Integer otherPeerId : clientConnectionHandlers.keySet()) {
             try {

@@ -27,7 +27,7 @@ public class Message extends PeerProcess {
         if (messageType == DATA_CHOKE || messageType == DATA_UNCHOKE ||
                 messageType == DATA_INTERESTED || messageType == DATA_UNINTERESTED)
         {
-            this.messageLength = 0;
+            this.messageLength = 1;
             this.data = new byte[0];
         }
         else
@@ -92,14 +92,6 @@ public class Message extends PeerProcess {
         for (int i = 0; i < this.data.length; i++) {
             msgAsByteArry[i + sizeHeader.length + 1] = this.data[i];
         }
-
-        System.out.print("msg as byte array: ");
-
-        for (int i = 0; i < msgAsByteArry.length; i++) {
-            System.out.printf("0x%x ", msgAsByteArry[i]);
-        }
-
-        System.out.print("\n");
 
         return msgAsByteArry;
 
