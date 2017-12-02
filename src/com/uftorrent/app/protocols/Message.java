@@ -25,7 +25,7 @@ public class Message extends PeerProcess {
     //If only given a messageType, the message should not have a length or payload
     public Message(byte messageType) {
         if (messageType == DATA_CHOKE || messageType == DATA_UNCHOKE ||
-                messageType == DATA_INTERESTED || messageType == DATA_UNINTERESTED || messageType == 0x8)
+                messageType == DATA_INTERESTED || messageType == DATA_UNINTERESTED || messageType == 0x8 || messageType == 0x9)
         {
             this.messageLength = 1;
             this.data = new byte[0];

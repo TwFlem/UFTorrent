@@ -89,15 +89,30 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
                 bytesRead = bytesIn.read(msgBody, 0, msgBody.length);
                 System.out.println("# of payload bytes read from client: " + bytesRead);
 
+                if (msgType[0] == 0x9) {
+                    serverConnectionHandlers.remove(this.otherPeerId);
+                    this.clientConnection.close();
+                    System.out.println("blank msg client " + peerId);
+                    break;
+                }
+
+                if (msgType[0] == 0x8) {
+                    System.out.println("blank msg client " + peerId);
+                    continue;
+                }
+
                 byte[] msg = protocol.handleInput(msgType[0], msgBody).msgToByteArray();
                 util.printMsg(msg, peerId, this.otherPeerId, "server", "client");
-                if (msgType[0] == 0x8) {
-                    System.out.println("blank msg sent to server " + peerId);
-                } else {
-                    bytesOut.write(msg);
-                }
+                bytesOut.write(msg);
             } catch(Exception e) {
                 System.out.println("Server ConnectionHandler " + this.otherPeerId + " closed\n" + e + "\n");
+                serverConnectionHandlers.remove(this.otherPeerId);
+                try {
+                    this.clientConnection.close();
+                } catch (Exception g) {
+
+                }
+                break;
             }
         }
     }
@@ -121,6 +136,9 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
 
     public void choke() {
         isChokingClient = true;
+        if (this.clientConnection.isClosed()) {
+            return;
+        }
         try {
             Message chokeMsg = new Message((byte)0x0);
             util.printMsg(chokeMsg.msgToByteArray(), peerId, this.otherPeerId, "server", "client");
@@ -132,6 +150,9 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
     }
     public void unchoke() {
         isChokingClient = false;
+        if (this.clientConnection.isClosed()) {
+            return;
+        }
         try {
             Message chokeMsg = new Message((byte)0x1);
             util.printMsg(chokeMsg.msgToByteArray(), peerId, this.otherPeerId, "server", "client");
@@ -143,6 +164,9 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
     }
     public void sendHaveMessage(int pieceIndex)
     {
+        if (this.clientConnection.isClosed()) {
+            return;
+        }
         try {
             Message haveMessage = new Message((byte) 0x5, (byte) 0x4, util.intToByteArray(pieceIndex));
             System.out.println("Sending a have message of length: " + haveMessage.getLength());
