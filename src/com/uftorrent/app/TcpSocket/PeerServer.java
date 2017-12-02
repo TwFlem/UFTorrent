@@ -9,6 +9,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.Vector;
+import java.util.Collections;
+import java.util.Random;
 
 
 public class PeerServer extends PeerProcess implements Runnable {
@@ -45,41 +47,72 @@ public class PeerServer extends PeerProcess implements Runnable {
             }
         System.out.print("Main Sever thread has shook all hands");
 
-        TimerTask task = new TimerTask() {
+        TimerTask taskOptimisticUnchoking = new TimerTask() {
             @Override
             public void run() {
-                double downRatePref1 = 0.0;
-                double downRatePref2 = 0.0;
-                Vector<ServerConnectionHandler> preferredNeighbors = new Vector<ServerConnectionHandler>();
-                ServerConnectionHandler prefer1 = null;
-                ServerConnectionHandler prefer2 = null;
-                if (serverConnectionHandlers.size() > 1) {
-                    for (Integer otherPeerId : serverConnectionHandlers.keySet()) {
-                        if (serverConnectionHandlers.get(otherPeerId).downloadRate >= downRatePref1) {
-                            prefer1 = serverConnectionHandlers.get(otherPeerId);
-                        } else if (serverConnectionHandlers.get(otherPeerId).downloadRate >= downRatePref2 && serverConnectionHandlers.get(otherPeerId).downloadRate < downRatePref1) {
-                            prefer2 = serverConnectionHandlers.get(otherPeerId);
-                        }
-
+                Vector<ServerConnectionHandler> chokedNeighbors  = new Vector<ServerConnectionHandler>();
+                for (Integer otherPeerId : serverConnectionHandlers.keySet()) {
+                    if (serverConnectionHandlers.get(otherPeerId).isChokingClient) {
+                        chokedNeighbors.add(serverConnectionHandlers.get(otherPeerId));
                     }
-                    preferredNeighbors.addElement(prefer2);
                 }
-                preferredNeighbors.addElement(prefer1);
+                Random rand = new Random();
+                int n = rand.nextInt(chokedNeighbors.size());
+                ServerConnectionHandler optimistic = chokedNeighbors.elementAt(n);
+                optimistic.unchoke();
+                optimistic.connectionThread.resume();
+            }
+        };
+        TimerTask taskChoking = new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("Choking interval start");
+                double downloadRate = 0.0;
+                Vector<DownloadRates> preferredNeighbors = new Vector<DownloadRates>();
+                Vector<DownloadRates> rates = new Vector<DownloadRates>();
+
+                for (Integer otherPeerId : serverConnectionHandlers.keySet()) {
+                    downloadRate = serverConnectionHandlers.get(otherPeerId).totalBytesRead/commonVars.getUnchokingInterval();
+                    rates.addElement(new DownloadRates(otherPeerId, downloadRate));
+                    serverConnectionHandlers.get(otherPeerId).totalBytesRead = 0;
+                }
+                Collections.sort(rates);
+
+                String listOfPrefNeighbors = "";
+                for (int j = 0; j < commonVars.getNumberOfPrefferedNeighbors(); j++) {
+                    preferredNeighbors.addElement(rates.elementAt(j));
+                    listOfPrefNeighbors += rates.elementAt(j).peerId + " ";
+                }
+                System.out.println("List of Preferred Neighbors: " + listOfPrefNeighbors);
+
                 boolean unchokedNeighbor = false;
                 for (Integer otherPeerId : serverConnectionHandlers.keySet()) {
+                    ServerConnectionHandler otherConnection = serverConnectionHandlers.get(otherPeerId);
                     for (int i = 0; i < preferredNeighbors.size(); i++) {
-                        if (serverConnectionHandlers.get(otherPeerId) == preferredNeighbors.elementAt(i) && serverConnectionHandlers.get(otherPeerId).isChokingTheOtherPeer == true) {
-                            serverConnectionHandlers.get(otherPeerId).unchoke();
+                        ServerConnectionHandler prefConnection = serverConnectionHandlers.get(preferredNeighbors.elementAt(i).peerId);
+                        if (prefConnection == otherConnection) {
+                            otherConnection.unchoke();
+                            otherConnection.connectionThread.resume();
+
+                            System.out.println("Unchoked PeerId: " + preferredNeighbors.elementAt(i).peerId);
                             unchokedNeighbor = true;
                         }
                     }
                     if (!unchokedNeighbor) {
-                        serverConnectionHandlers.get(otherPeerId).choke();
+                        otherConnection.choke();
+                        try {
+                            otherConnection.connectionThread.suspend();
+                        }
+                        catch (Exception e) {
+                            System.out.println("suspend thread didn't work?");
+                        }
+                        System.out.println("Unchoked PeerId: " + otherPeerId);
                     }
                 }
             }
         };
-        timer.schedule(task, 0, (int)(commonVars.getUnchokingInterval() * 1000));
+        timer.schedule(taskChoking, 0, (int)(commonVars.getUnchokingInterval() * 1000));
+        timer.schedule(taskOptimisticUnchoking, 0, (int)(commonVars.getOptimisticUnchokingInterval() * 1000));
         for (Integer otherPeerId : serverConnectionHandlers.keySet()) {
                 System.out.println("waiting for servers to finish");
                 try {
