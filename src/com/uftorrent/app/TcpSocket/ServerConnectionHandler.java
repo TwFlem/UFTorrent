@@ -12,7 +12,9 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
     private BufferedReader handIn;
     private InputStream bytesIn;
     private OutputStream bytesOut;
+    public boolean isPreferred;
     public boolean isChokingTheOtherPeer;
+    public double downloadRate;
     public boolean isNotInteresting;
     public byte[] otherPeersBitfield;
     public byte[] possiblePieces;
@@ -89,5 +91,12 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
             System.out.print("Whoops! Server unexpectedly quit!\n" + e.getMessage());
         }
         return 0;
+    }
+
+    public void choke() {
+        isChokingTheOtherPeer = true;
+    }
+    public void unchoke() {
+        isChokingTheOtherPeer = false;
     }
 }
