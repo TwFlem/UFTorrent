@@ -148,10 +148,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
         if (Arrays.equals(fullBitfield, bitfield))
         {
             eventLogger.downloadComplete(otherPeerId);
-            for (int i = 0; i < bitfield.length; i++)
-            {
-                util.writeFilePiece(commonVars.getFileName(), pieces[i]); //TODO: test this and make sure the filename is right
-            }
+            util.writeFile(downloadFilePath, pieces, bitfield); //TODO: test this and make sure the filename is right
         }
 
         //respond with a request message for a new piece
