@@ -69,7 +69,6 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
                 int messageSize = util.byteArrayToInt(sizeHeaderFromClient);
                 System.out.println("Size of message From Client: " + messageSize);
 
-                util.sleep(1);
                 if (messageSize == 0) {
                     System.out.println("serverConnectionHandler " + peerId + " Waiting on " + this.otherPeerId);
                     continue;

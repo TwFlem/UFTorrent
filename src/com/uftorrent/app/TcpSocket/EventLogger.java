@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.time.LocalDateTime;
 
 import com.uftorrent.app.main.PeerProcess;
+import com.uftorrent.app.utils.Util;
 
 public class EventLogger extends PeerProcess {
     private void writeToFile(String line) {
@@ -43,8 +44,9 @@ public class EventLogger extends PeerProcess {
         this.writeToFile(String.format("%s: Peer %s is choked by %s.\n",LocalDateTime.now(), peerId, otherPeerId));
     }
     void receivedHaveMsg(int otherPeerId, int pieceIndex) {
+        int temp = pieceIndex < 0 ? 0xff & pieceIndex : pieceIndex;
         this.writeToFile(String.format("%s: Peer %s received the \'have\' " +
-                            "message from %s for the piece %s.\n",LocalDateTime.now(), peerId, otherPeerId, pieceIndex));
+                            "message from %s for the piece %s.\n",LocalDateTime.now(), peerId, otherPeerId, temp));
     }
     void receiveInterestedMsg(int otherPeerId) {
         this.writeToFile(String.format("%s: Peer %s received the \'interested\' message from %s.\n",LocalDateTime.now(), peerId, otherPeerId));
@@ -53,8 +55,9 @@ public class EventLogger extends PeerProcess {
         this.writeToFile(String.format("%s: Peer %s received the \'not interested\' message from %s.\n",LocalDateTime.now(), peerId, otherPeerId));
     }
     void downloadedPiece(int otherPeerId, int pieceIndex, int numOfPieces) {
+        int temp = pieceIndex < 0 ? 0xff & pieceIndex : pieceIndex;
         this.writeToFile(String.format("%s: Peer %s has downloaded the piece %s from %s." +
-                "Now the number of pieces it has is %d.\n",LocalDateTime.now(), peerId, pieceIndex, otherPeerId, numOfPieces));
+                "Now the number of pieces it has is %d.\n",LocalDateTime.now(), peerId, temp, otherPeerId, numOfPieces));
     }
     void downloadComplete(int peerId) {
         this.writeToFile(String.format("%s: Peer %s has downloaded the complete file.\n",LocalDateTime.now(), peerId));

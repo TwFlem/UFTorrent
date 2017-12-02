@@ -90,14 +90,12 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
                 int messageSize = util.byteArrayToInt(sizeHeaderFromServer);
                 System.out.println("Size of message From Server: " + messageSize);
 
-                util.sleep(1);
                 if (messageSize == 0) {
                     System.out.println("clientConnectionHandler " + peerId + " Waiting on " + this.otherPeerId);
                     continue;
                 }
 
                 if (Arrays.equals(bitfield, fullBitfield)) {
-                    util.writeFile(commonVars, pieces, bitfield);
                     this.bytesOut.write((new Message((byte)0x9)).msgToByteArray());
                     clientConnectionHandlers.remove(this.otherPeerId);
                     this.socketToPeer.close();

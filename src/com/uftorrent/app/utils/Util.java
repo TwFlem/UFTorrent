@@ -204,10 +204,10 @@ public class Util {
         }
         return  interestedBitfield;
     }
-    public void writeFile(CommonVars cv, FilePiece[] fp, byte[] bf) {
+    public void writeFile(String downloadFilePath, FilePiece[] fp, byte[] bf) {
         for (int i = 0; i < bf.length; i++)
         {
-            this.writeFilePiece(cv.getFileName(), fp[i]); //TODO: test this and make sure the filename is right
+            this.writeFilePiece(downloadFilePath, fp[i]); //TODO: test this and make sure the filename is right
         }
     }
 }
