@@ -53,7 +53,7 @@ public class EventLogger extends PeerProcess {
         this.writeToFile(String.format("%s: Peer %s received the \'not interested\' message from %s.\n",LocalDateTime.now(), peerId, otherPeerId));
     }
     void downloadedPiece(String otherPeerId, String pieceIndex, int numOfPieces) {
-        this.writeToFile(String.format("%s: Peer %s has downloaded the piece %s from %s." +
+        this.writeToFile(String.format("%s: Peer %s has downloaded the piece %s from %s. " +
                             "Now the number of pieces it has is %d.\n",LocalDateTime.now(), peerId, pieceIndex, otherPeerId, numOfPieces));
     }
     void downloadComplete(String peerId) {

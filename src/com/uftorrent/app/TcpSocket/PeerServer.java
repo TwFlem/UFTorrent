@@ -2,12 +2,8 @@ package com.uftorrent.app.TcpSocket;
 
 
 import com.uftorrent.app.main.PeerProcess;
-import com.uftorrent.app.protocols.Message;
-
-import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 
@@ -22,9 +18,8 @@ public class PeerServer extends PeerProcess implements Runnable {
                     }
                     Socket clientConnection = serverSocket.accept();
                     ServerConnectionHandler newConnection = new ServerConnectionHandler(clientConnection);
-                    Thread newConnectionThread = new Thread(newConnection);
-                    newConnection.connectionThread = newConnectionThread;
-                    newConnectionThread.run();
+                    newConnection.connectionThread = new Thread(newConnection);
+                    newConnection.connectionThread.start();
                 }
             } catch(Exception e) {
                 System.out.print("Whoops! The Server quit unexpectedly!\n" + e + "\n");

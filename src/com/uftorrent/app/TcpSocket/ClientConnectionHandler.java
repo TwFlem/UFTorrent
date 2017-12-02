@@ -8,10 +8,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.Socket;
-import java.sql.Time;
-import java.util.concurrent.TimeUnit;
-
-import static java.lang.System.exit;
 
 public class ClientConnectionHandler extends PeerProcess implements Runnable {
     private int otherPeerId;
@@ -24,8 +20,8 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
     public boolean isInterestedInOtherPeer;
     public boolean isChoked;
     public Thread connectionThread;
-    private byte[] possiblePieces; //The bitfield representing pieces I don't have that the other peer does
-    private byte[] otherPeersBitfield;
+    public byte[] possiblePieces; //The bitfield representing pieces I don't have that the other peer does
+    public byte[] otherPeersBitfield;
     private EventLogger eventLogger = new EventLogger();
     public ClientConnectionHandler(String hostName, int port) {
         Exception cantConnect = new Exception();
@@ -34,24 +30,26 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
                 util.sleep(1);
                 this.socketToPeer = new Socket(hostName, port);
                 this.isInterested = false;
-                handOut = new PrintStream(socketToPeer.getOutputStream(), true);
-                handIn = new DataInputStream(socketToPeer.getInputStream());
-                bytesIn = socketToPeer.getInputStream();
-                bytesOut = socketToPeer.getOutputStream();
+                this.handOut = new PrintStream(socketToPeer.getOutputStream(), true);
+                this.handIn = new DataInputStream(socketToPeer.getInputStream());
+                this.bytesIn = socketToPeer.getInputStream();
+                this.bytesOut = socketToPeer.getOutputStream();
                 cantConnect = null;
             } catch(Exception e) {
                 cantConnect = e;
                 System.out.println("Unable to connect to " + hostName + " at " + port);
             }
-            handOut.println(handshakeMessage);
-            this.otherPeerId = waitForHandshake();
-        clientConnectionHandlers.put(otherPeerId, this);
-        System.out.println("ClientConnectionHandler for " + this.otherPeerId);
     }
     public void run() {
         try {
+            System.out.println("Client connection handler " + peerId + " started");
+            this.handOut.println(handshakeMessage);
+            this.otherPeerId = waitForHandshake();
+            clientConnectionHandlers.put(otherPeerId, this);
+            System.out.println("ClientConnectionHandler for " + this.otherPeerId);
+
             Message initialBitfieldMessage = new Message(bitfield.length + 1, (byte)5, bitfield);
-            bytesOut.write(initialBitfieldMessage.msgToByteArray());
+            this.bytesOut.write(initialBitfieldMessage.msgToByteArray());
 
             this.startAsking();
 
@@ -64,7 +62,7 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
     private int waitForHandshake() {
         try {
             String fromServer;
-            while ((fromServer = handIn.readLine()) != null) {
+            while ((fromServer = this.handIn.readLine()) != null) {
                 System.out.println("Handshake Received From Server: " + fromServer);
                 if (fromServer.substring(0, 18).equals("P2PFILESHARINGPROJ")) {
                     String otherPeerId = fromServer.substring(fromServer.length() - 4);
@@ -86,16 +84,21 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
             int bytesRead;
 
             try {
-                bytesIn.read(sizeHeaderFromServer, 0, 4);
-                int messageSize = util.packetSize(sizeHeaderFromServer);
+                this.bytesIn.read(sizeHeaderFromServer, 0, 4);
+                int messageSize = util.byteArrayToInt(sizeHeaderFromServer);
                 System.out.println("Size of message From Server: " + messageSize);
 
-                // ----- Temporary --------
-                if (msgType[0] == 0x05 || messageSize == 0) {
-                    System.out.println("Client connectionHandler " + this.otherPeerId + " has closed");
+                util.sleep(1);
+                if (messageSize == 0) {
+                    System.out.println("clientConnectionHandler " + peerId + " Waiting on " + this.otherPeerId);
+                    continue;
+                }
+
+                if (peerInfo.getHasCompleteFile(peerId)) {
+                    socketToPeer.close();
+                    System.out.println(peerId + " client has complete file, closing connection to " + this.otherPeerId + " server");
                     break;
                 }
-                // -------------------------
 
                 bytesIn.read(msgType, 0, 1);
                 System.out.println("Message type of server: " + msgType[0]);
@@ -104,7 +107,9 @@ public class ClientConnectionHandler extends PeerProcess implements Runnable {
                 bytesRead = bytesIn.read(msgBody, 0, msgBody.length);
                 System.out.println("# of payload bytes read from server: " + bytesRead);
 
-                bytesOut.write(protocol.handleInput(msgType[0], msgBody).msgToByteArray());
+                byte[] msg = protocol.handleInput(msgType[0], msgBody).msgToByteArray();
+                util.printMsg(msg, peerId, this.otherPeerId, "client", "server");
+                this.bytesOut.write(msg);
             } catch (Exception e) {
                 System.out.println("Problem Reading from Server " + this.otherPeerId + "\n" + e + "\n");
             }
