@@ -44,7 +44,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
         //TODO: Is this fine for choking? This probably shouldn't actually return a message at all, maybe implement a -1 return message?.
         eventLogger.chokeNeighbor(otherPeerId);
         clientConnectionHandlers.get(otherPeerId).isChoked = true;
-        return new Message((byte)0x0);
+        return new Message((byte)0x8);
     }
     //Message type 1: unchoke
     private Message handleUnchoke() {
@@ -60,14 +60,14 @@ public class UFTorrentClientProtocol extends PeerProcess {
         //TODO: Test. probably dont send a message back?
         eventLogger.receiveInterestedMsg(otherPeerId);
         clientConnectionHandlers.get(otherPeerId).isInterested = true;
-        return new Message((byte)0x2);
+        return new Message((byte)0x8);
     }
     //message type 3: uninterested
     private Message handleUninterested() {
         //TODO: Test. probably don't send a message back?
         eventLogger.receiveNotInterestedMsg(otherPeerId);
         clientConnectionHandlers.get(otherPeerId).isInterested = true;
-        return new Message((byte)0x2);
+        return new Message((byte)0x8);
     }
     //message type 4: Have
     //handle a have message, this should be complete
@@ -134,7 +134,7 @@ public class UFTorrentClientProtocol extends PeerProcess {
         pieces[pieceIndex] = newPiece;
         for(Integer connectionKey : clientConnectionHandlers.keySet())
         {
-            clientConnectionHandlers.get(connectionKey).sendHaveMessage(pieceIndex);
+            serverConnectionHandlers.get(connectionKey).sendHaveMessage(pieceIndex);
         }
 //        for(clientConnectionHandlers.get(p))
 

@@ -87,7 +87,10 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
                 System.out.println("# of payload bytes read from client: " + bytesRead);
                 byte[] msg = protocol.handleInput(msgType[0], msgBody).msgToByteArray();
                 util.printMsg(msg, peerId, this.otherPeerId, "server", "client");
-                bytesOut.write(msg);
+                if (msgType[0] == 0x8) {
+                    System.out.println("blank message");
+                }
+                this.bytesOut.write(msg);
             } catch(Exception e) {
                 System.out.println("Server ConnectionHandler " + this.otherPeerId + " closed\n" + e + "\n");
             }
@@ -116,5 +119,19 @@ public class ServerConnectionHandler extends PeerProcess implements Runnable {
     }
     public void unchoke() {
         isChokingTheOtherPeer = false;
+    }
+    public void sendHaveMessage(int pieceIndex)
+    {
+        try {
+            Message haveMessage = new Message((byte) 0x5, (byte) 0x4, util.intToByteArray(pieceIndex));
+            System.out.println("Sending a have message of length: " + haveMessage.getLength());
+            byte[] msg2 = haveMessage.msgToByteArray();
+            util.printMsg(msg2, peerId, this.otherPeerId, "client", "server");
+            this.bytesOut.write(msg2);
+        }
+        catch (Exception e) {
+            System.out.println("Problem sending a have message " + this.otherPeerId + "\n" + e + "\n");
+        }
+
     }
 }
